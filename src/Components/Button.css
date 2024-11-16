@@ -1,0 +1,47 @@
+.btn {
+    position: relative;
+    padding: 15px 20px 10px 20px;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    margin: 20px 10px;
+    font-weight: bold;
+    border: solid 2px #222222;
+    background-color: transparent;
+    color: #222222;
+    cursor: pointer;
+    overflow: hidden;
+    z-index: 1; 
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+.spn {
+    background-color: #222222;
+    height: 0;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transition: 0.5s ease;
+    z-index: -1; 
+}
+
+.btn:hover .spn{
+    height: 100%;
+    color: white;
+}
+.btn:hover{
+    color: white;
+    border: solid 2px white;
+}
+.blk{
+    color: white;
+    background-color: #222222;
+}
+
+.bl{
+    background-color: #5EC1A1;
+}

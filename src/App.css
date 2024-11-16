@@ -1,0 +1,25 @@
+.status{
+    width: 50px; 
+    height: 30px; 
+    text-align: center;
+    color: white;
+    padding-top: 2px;
+    padding-left:3px;
+    clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 25% 100%, 0% 50%);
+  }
+  
+.background-Sale {
+  background-image: url('./assets/img/Sale.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.icon {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1); /* Slightly enlarges the icon on hover */
+}
+/* App.css */
+.css-ijwub5-MuiTypography-root{display: none;}

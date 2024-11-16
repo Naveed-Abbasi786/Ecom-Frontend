@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    @font-face {
+      font-family: 'Poppins';
+      font-style: normal;
+      font-weight: bold;
+      font-display: swap;
+      src: url(./assets/fonts/Poppins.woff2) format('woff2');
+    }
+  }
+  @layer base {
+    @font-face {
+      font-family: 'Josefi';
+      font-style: normal;
+      font-display: swap;
+      src: url(./assets/fonts/jos.woff2) format('woff2');
+    }
+  }
+  @layer base {
+    @font-face {
+      font-family: 'PoppinsBold';
+      font-style: normal;
+      font-display: swap;
+      src: url(./assets/fonts/PoppinsBold.woff2) format('woff2');
+    }
+  }
