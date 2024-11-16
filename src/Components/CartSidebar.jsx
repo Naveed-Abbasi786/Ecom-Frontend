@@ -14,6 +14,7 @@ import LinearProgress, {
 } from "@mui/material/LinearProgress";
 import styled from "@emotion/styled";
 import Products from "./Products";
+import { useNavigate } from "react-router-dom";
 const BorderLinearProgress = styled(LinearProgress)({
   height: 10,
   borderRadius: 5,
@@ -58,8 +59,10 @@ export default function CartSidebar({ isOpen, closeSidebar,product  }) {
       const selected = countries.find((c) => c.value === country);
       setSelectedCountry(selected.value);
     };
-  
-
+  const navigate =useNavigate()
+ const YourBag=()=>{
+  navigate('/YourBag')
+ }
   return (
     <div
       className={`fixed top-0 right-0 lg:w-[25%] md:w-[50%]  w-[100%] h-screen  overflow-y-auto outline-none bg-white shadow-lg z-50 transform transition-transform duration-300 ${
@@ -195,10 +198,10 @@ export default function CartSidebar({ isOpen, closeSidebar,product  }) {
             </span>
           </div>
           <div className="flex h-[7vh] gap-2 justify-center ml-2 mt-4">
-  <button className="w-[150px] h-[40px] duration-500 bg-[#5EC1A1] hover:bg-transparent hover:text-[#5EC1A1] text-white duration-300 transition ease-in-out hover:border-2 border-[#5EC1A1] outline-none">
+  <button onClick={YourBag} className="w-[150px] h-[40px] duration-500 bg-[#5EC1A1] hover:bg-transparent hover:text-[#5EC1A1] text-white duration-300 transition ease-in-out hover:border-2 border-[#5EC1A1] outline-none">
     Your Bag
   </button>
-  <button className="w-[150px] h-[40px] bg-transparent text-[#5EC1A1] border-2 border-[#5EC1A1] hover:text-white hover:bg-[#5EC1A1] duration-300 transition ease-in-out outline-none">
+  <button  className="w-[150px] h-[40px] bg-transparent text-[#5EC1A1] border-2 border-[#5EC1A1] hover:text-white hover:bg-[#5EC1A1] duration-300 transition ease-in-out outline-none">
     Your Check Out
   </button>
 </div>

@@ -6,6 +6,7 @@ import Resetpassword from '../Pages/ResetPassword'
 import Dashboarad from '../Dashboard/dashboarad'
 import DashboardLayout from '../Dashboard/dashboradLayout'
 import AddProducts from '../Dashboard/DashboradPages/AddProducts'
+import YourBag from '../Pages/YourBag'
 export default function Router() {
  
     return (
@@ -16,6 +17,7 @@ export default function Router() {
       <Route  path="/dashboard/*" element={<DashboardLayout />}/>
       <Route path="/dashboard/AddProducts" element={<AddProducts/>}/> 
       <Route  path='/ForgetPasswrod' element={<ForgetPasswrod />}/>
+      <Route  path='/YourBag' element={<YourBag />}/>
       <Route  path='/reset-password' element={<Resetpassword />}/>
       <Route  path='/ProductDetail/:id' element={<ProductDetail/>}/>      
       </Routes>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Header from "./Header";
+import Header from "../Components/Header";
 import HeroSection from "./HeroSecton";
 import SlideLogos from "../Components/SlideLogos";
 import Category1 from "../assets/img/category-1.png";

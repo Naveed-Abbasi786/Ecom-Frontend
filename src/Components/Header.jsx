@@ -1,7 +1,7 @@
 import React from 'react'
-import MiniNavbar from '../Components/MiniNavbar'
-import MainNavbar from '../Components/MainNavbar'
-import Navbar from '../Components/Navbar'
+import MiniNavbar from './MiniNavbar'
+import MainNavbar from './MainNavbar'
+import Navbar from './Navbar'
 export default function AllNavbars() {
   return (
       <div>

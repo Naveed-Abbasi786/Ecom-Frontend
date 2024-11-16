@@ -18,7 +18,7 @@ const validationSchema = Yup.object({
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive"),
-  discountPrice: Yup.number().positive("Discount price must be positive"),
+  discountPercantage: Yup.number().positive("Discount price must be positive"),
   description: Yup.string().required("Requird the Discription"),
   Quantity:Yup.number().required("Requird Quanity").positive('must be positive'),
   // category:Yup.required('Requird Category'),
@@ -114,11 +114,12 @@ const AddProducts = () => {
     }
     const formData = new FormData();
     formData.append("subCategoryId", selectedSubCategoryId);
+    formData.append("categoryId", selectedCategoryId);
     formData.append("name", values.productName);
     formData.append("heading", values.heading);
     formData.append("description", values.description);
     formData.append("price", values.price);
-    formData.append("discount", values.discountPrice);
+    formData.append("discount", values.discountPercantage);
     formData.append("quantity",values.Quantity); 
 
     imageFiles.forEach((file) => {
@@ -170,7 +171,7 @@ const AddProducts = () => {
         productName: "",
         heading: "",
         price: "",
-        discountPrice: "",
+        discountPercantage: "",
         description: "",
         category: null,
         Subcategory:null,
@@ -251,12 +252,12 @@ const AddProducts = () => {
             />
 
           <TextField
-            label="Discount Price"
+            label="Discount Percentage%"
             type="number"
             variant="outlined"
             fullWidth
-            name="discountPrice"
-            value={values.discountPrice}
+            name="discountPercantage"
+            value={values.discountPercantage}
             onChange={handleChange}
           />
            <TextField

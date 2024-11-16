@@ -1,10 +1,24 @@
 import { Icon } from "@iconify/react";
-import { Card, CardHeader, Typography, CardBody, Avatar, CardFooter } from "@material-tailwind/react";
+import {
+  Card,
+  CardHeader,
+  Typography,
+  CardBody,
+  Avatar,
+  CardFooter,
+} from "@material-tailwind/react";
 import { CircularProgress } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const TABLE_HEAD = ["Product Name", "Category", "Subcategory", "Price", "Status", "Actions"];
+const TABLE_HEAD = [
+  "Product Name",
+  "Category",
+  "Subcategory",
+  "Price",
+  "Status",
+  "Actions",
+];
 
 export default function ProductsTable() {
   const [allProducts, setAllProducts] = useState([]);
@@ -17,7 +31,7 @@ export default function ProductsTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [viewAll, setViewAll] = useState(false);
-    const [status,setStatus]=useState(false)
+  const [status, setStatus] = useState(false);
 
   const itemsPerPage = 5;
 
@@ -25,8 +39,12 @@ export default function ProductsTable() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://192.168.100.106:4000/api/cat/products");
-        const activeProducts = response.data.products.filter((product) => !product.isDeleted);
+        const response = await axios.get(
+          "http://192.168.100.106:4000/api/cat/products"
+        );
+        const activeProducts = response.data.products.filter(
+          (product) => !product.isDeleted
+        );
         setAllProducts(activeProducts);
         setFilteredProducts(activeProducts.slice(0, itemsPerPage));
       } catch (error) {
@@ -39,44 +57,62 @@ export default function ProductsTable() {
     fetchCategories();
   }, []);
 
- const hanldeEdit=(_id)=>{
-  alert(_id)
- }
-     const handleDelete =async (_id) => {
-        try {
-          const response = await axios.post("http://192.168.100.106:4000/api/cat/product/soft-delete", { productId:_id });
-          console.log('succusfult delete')
-        } catch (error) {
-          console.log(error)
-        }  
-        if (window.confirm("Are you sure you want to delete this item?")) {
-          const updatedProducts = filteredProducts.filter(product => product?._id !== _id);
-          setFilteredProducts(updatedProducts);
-          setAllProducts(allProducts.filter(product => product?._id !== _id));
-          alert("Product deleted successfully!");
-        } else {
-            alert("Deletion cancelled.");
-        }
-      };
-      const [statusMap, setStatusMap] = useState({});
+  const hanldeEdit = (_id) => {
+    alert(_id);
+  };
+  const handleDelete = async (_id) => {
+    // First, ask for confirmation
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this item?"
+    );
 
-const handleStatus = async (_id) => {
-  setStatusMap((prevStatusMap) => {
-    const newStatus = !prevStatusMap[_id];  // Toggle the status for specific product ID
-    return { ...prevStatusMap, [_id]: newStatus }; // Update only the status of the specific product ID
-  });
+    if (!isConfirmed) {
+      alert("Deletion cancelled.");
+      return; // If cancelled, exit the function
+    }
 
-  try {
-    const response = await axios.post("http://192.168.100.106:4000/api/cat/product/toggle-visibility", { 
-      productId: _id,
-      isPublic: statusMap[_id]  // Send the updated status for the specific product
+    // If confirmed, proceed with deletion logic
+    try {
+      const response = await axios.post(
+        "http://192.168.100.106:4000/api/cat/product/soft-delete",
+        { productId: _id }
+      );
+      console.log("Successfully deleted");
+
+      // Remove the product from the state
+      const updatedProducts = filteredProducts.filter(
+        (product) => product?._id !== _id
+      );
+      setFilteredProducts(updatedProducts);
+      setAllProducts(allProducts.filter((product) => product?._id !== _id));
+
+      alert("Product deleted successfully!");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const [statusMap, setStatusMap] = useState({});
+
+  const handleStatus = async (_id) => {
+    setStatusMap((prevStatusMap) => {
+      const newStatus = !prevStatusMap[_id]; // Toggle the status for specific product ID
+      return { ...prevStatusMap, [_id]: newStatus }; // Update only the status of the specific product ID
     });
-    console.log('Successfully toggled visibility for product ID:', _id);
-  } catch (error) {
-    console.log('Error:', error);
-  }
-};
 
+    try {
+      const response = await axios.post(
+        "http://192.168.100.106:4000/api/cat/product/toggle-visibility",
+        {
+          productId: _id,
+          isPublic: statusMap[_id], // Send the updated status for the specific product
+        }
+      );
+      console.log("Successfully toggled visibility for product ID:", _id);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
 
   useEffect(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -85,153 +121,184 @@ const handleStatus = async (_id) => {
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    setFilteredProducts(viewAll ? filtered : filtered.slice(startIndex, endIndex));
+    setFilteredProducts(
+      viewAll ? filtered : filtered.slice(startIndex, endIndex)
+    );
   }, [searchTerm, currentPage, allProducts, viewAll]);
 
   const sortProducts = (column) => {
     const newSortOrder = sortOrders[column] === "asc" ? "desc" : "asc";
     const sorted = [...allProducts].sort((a, b) => {
       if (column === "price") {
-        return newSortOrder === "asc" ? +a[column] - +b[column] : +b[column] - +a[column];
+        return newSortOrder === "asc"
+          ? +a[column] - +b[column]
+          : +b[column] - +a[column];
       }
-      return newSortOrder === "asc" ? (a[column] > b[column] ? 1 : -1) : a[column] < b[column] ? 1 : -1;
+      return newSortOrder === "asc"
+        ? a[column] > b[column]
+          ? 1
+          : -1
+        : a[column] < b[column]
+          ? 1
+          : -1;
     });
-  
-    setFilteredProducts(sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage));
+
+    setFilteredProducts(
+      sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    );
     setSortOrders((prev) => ({
       ...prev,
       [column]: newSortOrder,
     }));
   };
-  
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <Card className="w-full max-w-[100%]">
-      <CardHeader floated={false} shadow={false} className="rounded-none flex justify-between items-center">
-  <div className="relative w-72 ml-2">
-    <div className="absolute inset-y-0 left-3 flex items-center">
-      <Icon icon="mdi:magnify" className="text-gray-500" />
-    </div>
-    <input
-      className="peer h-full w-full pl-10 rounded-[7px] border border-blue-gray-200 px-3 py-2.5 text-sm font-normal text-blue-gray-700 placeholder-shown:border placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:outline-none"
-      placeholder="Search"
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  </div>
-  <div>
-    <Icon
-      icon={sortOrders.name === "asc" ? "mdi:sort-ascending" : "mdi:sort-descending"}
-      className="text-gray-600 text-2xl cursor-pointer"
-      onClick={() => sortProducts("name")}
-    />
-  </div>
-</CardHeader>
+    <div className="w-full flex bg-transparent flex-col items-center">
+      <Card className="w-full bg-transparent max-w-[100%]">
+        <CardHeader
+          floated={false}
+          shadow={false}
+          className="rounded-none bg-transparent flex justify-between items-center"
+        >
+          <div className="relative w-72 ml-2">
+            <div className="absolute inset-y-0 left-3 flex items-center">
+              <Icon icon="mdi:magnify" className="text-gray-500" />
+            </div>
+            <input
+              className="peer h-full w-full pl-10 rounded-[7px] border border-blue-gray-200 px-3 py-2.5 text-sm font-normal text-blue-gray-700 placeholder-shown:border placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:outline-none"
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div>
+            <Icon
+              icon={
+                sortOrders.name === "asc"
+                  ? "mdi:sort-ascending"
+                  : "mdi:sort-descending"
+              }
+              className="text-gray-600 text-2xl cursor-pointer"
+              onClick={() => sortProducts("name")}
+            />
+          </div>
+        </CardHeader>
 
         <CardBody className="overflow-auto px-0 h-[400px]">
-  <table className="mt-4 w-full text-left">
-    <thead>
-      <tr>
-        {TABLE_HEAD.map((head, index) => (
-          <th
-            key={head}
-            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 text-gray-800 font-normal"
-          >
-            {head}
-          </th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {loading ? (
-        <tr>
-          <td colSpan={TABLE_HEAD.length} className="text-center p-4">
-            <div className="flex items-center justify-center items-center  h-full">
-              <div className="mx-auto mt-36"><CircularProgress/></div>
-            </div>
-          </td>
-        </tr>
-      ) : filteredProducts.length > 0 ? (
-        filteredProducts.map((product, index) => (
-          <tr key={index}>
-            <td className="p-4 border-b flex items-center gap-4 border-blue-gray-50">
-              <Avatar
-                src={`http://192.168.100.106:4000${product.imageUrls[0]}`}
-                alt={product.name}
-                className="w-12 h-12"
-              />
-              {product.name}
-            </td>
-            <td className="p-4 border-b border-blue-gray-50">{product.subCategory?.category?.name}</td>
-            <td className="p-4 border-b border-blue-gray-50">{product.subCategory?.name}</td>
-            <td className="p-4 border-b border-blue-gray-50">{product.price}</td>
-            <td className="p-4 border-b border-blue-gray-50">
-              {product.quantity > 0 ? `Available: ${product.quantity}` : "Out of Stock"}
-            </td>
-            <td className="p-4 border-b  border-blue-gray-50">
-                      <div className='flex gap-2'>
-
-                      <Icon icon="ic:round-edit" className="text-[20px] cursor-pointer hover:text-red-800"  onClick={() => hanldeEdit(product._id)}/>
-                      <Icon
-  icon={`${statusMap[product._id] ? "mdi-light:lock" : "mdi-light:lock-open"}`} 
-  className="text-[20px] cursor-pointer hover:text-sky-700"
-  onClick={() => handleStatus(product._id)}
-/>
-
-                        <Icon icon="mdi:delete-outline" className="text-[20px] cursor-pointer hover:text-red-500" onClick={() => handleDelete(product._id)}/>
+          <table className="mt-4 w-full text-left">
+            <thead>
+              <tr>
+                {TABLE_HEAD.map((head, index) => (
+                  <th
+                    key={head}
+                    className="border-y text-black border-blue-gray-100 bg-blue-gray-50/50 p-4  font-normal"
+                  >
+                    {head}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={TABLE_HEAD.length} className="text-center p-4">
+                    <div className="flex items-center justify-center items-center  h-full">
+                      <div className="mx-auto mt-36">
+                        <CircularProgress />
                       </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredProducts.length > 0 ? (
+                filteredProducts.map((product, index) => (
+                  <tr key={index}>
+                    <td className="p-4 border-b  text-black flex items-center gap-4 border-blue-gray-50">
+                      <Avatar
+                        src={`http://192.168.100.106:4000${product.imageUrls[0]}`}
+                        alt={product.name}
+                        className="w-12 h-12"
+                      />
+                      {product.name}
+                    </td>
+                    <td className="p-4 border-b text-[#000000] border-blue-gray-50">
+                      {product.subCategory?.category?.name}
+                    </td>
+                    <td className="p-4 border-b border-blue-gray-50">
+                      {product.subCategory?.name}
+                    </td>
+                    <td className="p-4 border-b border-blue-gray-50">
+                      {product.price}
+                    </td>
+                    <td className="p-4 border-b border-blue-gray-50">
+                      {product.quantity > 0
+                        ? `Available: ${product.quantity}`
+                        : "Out of Stock"}
+                    </td>
+                    <td className="p-4 border-b  border-blue-gray-50">
+                      <div className="flex gap-2">
+                        <Icon
+                          icon="ic:round-edit"
+                          className="text-[23px] cursor-pointer text-gray-800 hover:text-red-800"
+                          onClick={() => hanldeEdit(product._id)}
+                        />
+                        <Icon
+                          icon={`${statusMap[product._id] ? "mdi:eye-lock-outline" : "iconamoon:eye"}`}
+                          className={` ${statusMap[product._id] ? "text-red-800" : "text-gray-800"} text-[23px]  cursor-pointer hover:text-sky-700`}
+                          onClick={() => handleStatus(product._id)}
+                        />
 
-                      </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="6" className="p-4 mt-40 text-center">
-            No products available
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</CardBody>
+                        <Icon
+                          icon="mdi:delete-outline"
+                          className="text-[23px] cursor-pointer text-gray-800 hover:text-red-500"
+                          onClick={() => handleDelete(product._id)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="p-4 mt-40 text-center">
+                    No products available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </CardBody>
 
         {!viewAll && (
-         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-         <button
-           disabled={currentPage === 1}
-           className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}`}
-           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-         >
-           Previous
-         </button>
-         <Typography variant="small" color="blue-gray" className="font-normal">
-           Page {currentPage} of {Math.ceil(allProducts.length / itemsPerPage)}
-         </Typography>
-         <button
-           disabled={currentPage === Math.ceil(allProducts.length / itemsPerPage)}
-           className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === Math.ceil(allProducts.length / itemsPerPage) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}`}
-           onClick={() => setCurrentPage((prev) => prev + 1)}
-         >
-           Next
-         </button>
-       </CardFooter>
-       
+          <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
+            <button
+              disabled={currentPage === 1}
+              className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Previous
+            </button>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="font-normal"
+            >
+              Page {currentPage} of{" "}
+              {Math.ceil(allProducts.length / itemsPerPage)}
+            </Typography>
+            <button
+              disabled={
+                currentPage === Math.ceil(allProducts.length / itemsPerPage)
+              }
+              className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === Math.ceil(allProducts.length / itemsPerPage) ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+            >
+              Next
+            </button>
+          </CardFooter>
         )}
       </Card>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
 // import { Icon } from '@iconify/react';
 // import { Card, CardHeader, Input, Typography, Button, CardBody, Avatar, IconButton, CardFooter } from "@material-tailwind/react";
@@ -256,8 +323,8 @@ const handleStatus = async (_id) => {
 //     name: 'asc',
 //     price: 'asc',
 //   });
-//   const [activeSort, setActiveSort] = useState(""); 
-//   const [searchTerm, setSearchTerm] = useState(""); 
+//   const [activeSort, setActiveSort] = useState("");
+//   const [searchTerm, setSearchTerm] = useState("");
 //   const [currentPage, setCurrentPage] = useState(1);
 //   const [status,setStatus]=useState(false)
 //   const [loading,setLoading]=useState(false)
@@ -271,12 +338,12 @@ const handleStatus = async (_id) => {
 //       try {
 //         setLoading(true);
 //         const response = await axios.get("http://192.168.100.106:4000/api/cat/products");
-  
+
 //         const activeProducts = response.data.products.filter(product => !product.isDeleted);
-  
+
 //         setAllProducts(activeProducts);
-//         setFilteredProducts(activeProducts.slice(0, itemsPerPage)); 
-  
+//         setFilteredProducts(activeProducts.slice(0, itemsPerPage));
+
 //         console.log("Filtered Products:", activeProducts);
 //       } catch (error) {
 //         setLoading(false);
@@ -285,10 +352,9 @@ const handleStatus = async (_id) => {
 //         setLoading(false);
 //       }
 //     };
-  
+
 //     fetchCategories();
 //   }, []);
-  
 
 //   // const  AddProduct=()=>{
 //   //   navigate('/dashboard/AddProducts')
@@ -299,11 +365,11 @@ const handleStatus = async (_id) => {
 //     const filtered = allProducts.filter(product =>
 //       product.name.toLowerCase().includes(searchTerm.toLowerCase())
 //     );
-    
+
 //     if (viewAll) {
-//       setFilteredProducts(filtered); 
+//       setFilteredProducts(filtered);
 //     } else {
-//       setFilteredProducts(filtered.slice(startIndex, endIndex)); 
+//       setFilteredProducts(filtered.slice(startIndex, endIndex));
 //     }
 //   }, [searchTerm, currentPage, allProducts, viewAll]);
 
@@ -321,9 +387,8 @@ const handleStatus = async (_id) => {
 //       ...prev,
 //       [column]: newSortOrder,
 //     }));
-//     setActiveSort(column); 
+//     setActiveSort(column);
 //   };
-
 
 //   const handleDelete =async (_id) => {
 //     alert(_id)
@@ -332,7 +397,7 @@ const handleStatus = async (_id) => {
 //       console.log('succusfult delete')
 //     } catch (error) {
 //       console.log(error)
-//     }  
+//     }
 //     if (window.confirm("Are you sure you want to delete this item?")) {
 //       const updatedProducts = filteredProducts.filter(product => product?._id !== _id);
 //       setFilteredProducts(updatedProducts);
@@ -342,7 +407,6 @@ const handleStatus = async (_id) => {
 //         alert("Deletion cancelled.");
 //     }
 //   };
-  
 
 //   const handlePageChange = (page) => {
 //     setCurrentPage(page);
@@ -352,18 +416,18 @@ const handleStatus = async (_id) => {
 //   //    alert()
 //   // }
 
-  // const handleStatus=async(_id)=>{
-  //   setStatus((prevStatus) => !prevStatus); 
-  //   try {
-  //     const response = await axios.post("http://192.168.100.106:4000/api/cat/product/toggle-visibility", { productId:_id ,isPublic:status });
-  //     console.log('succusfult lock')
-  //   } catch (error) {
-  //     console.log(error)
-  //   }  
-  // }
+// const handleStatus=async(_id)=>{
+//   setStatus((prevStatus) => !prevStatus);
+//   try {
+//     const response = await axios.post("http://192.168.100.106:4000/api/cat/product/toggle-visibility", { productId:_id ,isPublic:status });
+//     console.log('succusfult lock')
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 //   const handleViewToggle = () => {
-//     setViewAll(!viewAll); 
-//     setCurrentPage(1); 
+//     setViewAll(!viewAll);
+//     setCurrentPage(1);
 //   };
 
 //   return (
@@ -407,14 +471,13 @@ const handleStatus = async (_id) => {
 //             Search
 //           </label>
 //         </div>
-      
-        
+
 //           {/* <div className="w-full flex md:w-72">
 //             <Input
 //               placeholder="Search Products"
 //               className="px-16 py-3"
 //               icon={<SearchIcon className="text-[20px] mt-2 ml-4" />}
-//               value={searchTerm} 
+//               value={searchTerm}
 //               onChange={(e) => setSearchTerm(e.target.value)}
 //             />
 //           </div> */}
@@ -427,7 +490,7 @@ const handleStatus = async (_id) => {
 //       <th
 //         key={head}
 //         className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50"
-//         onClick={() => index === 0 && sortProducts(head.toLowerCase().replace(" ", ""))} 
+//         onClick={() => index === 0 && sortProducts(head.toLowerCase().replace(" ", ""))}
 //       >
 //         <Typography
 //           variant="small"
@@ -451,10 +514,9 @@ const handleStatus = async (_id) => {
 // </thead>
 
 //             <tbody>
-              
+
 //               {filteredProducts.length > 0 ? (
-              
-              
+
 //                 filteredProducts.map((val, index) => (
 //                   <tr key={index}>
 //                     <td className="p-4 border-b flex items-center border-blue-gray-50">
@@ -465,8 +527,8 @@ const handleStatus = async (_id) => {
 //                     <td className="p-4 border-b border-blue-gray-50">{val.subCategory?.name}</td>
 //                     <td className="p-4 border-b border-blue-gray-50">{val.price}</td>
 //                     <td className="p-4 border-b border-blue-gray-50">
-//   {val.quantity > 0 
-//     ? `Available: ${val.quantity}` 
+//   {val.quantity > 0
+//     ? `Available: ${val.quantity}`
 //     : "Out of Stock"}
 // </td>
 
@@ -475,7 +537,7 @@ const handleStatus = async (_id) => {
 
 //                       <Icon icon="ic:round-edit" className="text-[20px] cursor-pointer hover:text-red-800"  onClick={() => hanldeEdit(val._id)}/>
 //                       <Icon
-//   icon={`${status ? "mdi-light:lock" : "mdi-light:lock-open"}`}   
+//   icon={`${status ? "mdi-light:lock" : "mdi-light:lock-open"}`}
 //   className="text-[20px] cursor-pointer hover:text-sky-700"
 //   onClick={() => handleStatus(val._id)}
 // />
@@ -483,7 +545,7 @@ const handleStatus = async (_id) => {
 //                       </div>
 
 //                       </td>
-                   
+
 //                   </tr>
 //                 ))
 //               ) : (

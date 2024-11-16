@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import Header from "./Header";
+import Header from "../Components/Header";
 import { Icon } from "@iconify/react";
 import Product1 from "../assets/img/pro1.jpg";
 import Product2 from "../assets/img/pro2.jpg";
@@ -273,8 +273,10 @@ export default function ProductDetail() {
               (5 Reviews)
             </span>
           </div>
-          <h3 className="text-[27px] font-Poppins text-[#222] py-8">${product.price}</h3>
-          <p className="text-[14px] font-Poppins text-[#222] w-[90%]">
+          <del className="text-[27px] font-Poppins leading-[28px] text-[#222] mt-8">${product.price}</del>
+          <h3 className="text-[18px] font-Poppins leading-[28px] text-red-300  ">{product.discountedPrice}</h3>
+          {/* <span className="text-[14px] font-Poppins leading-[28px] px-4">{product.discount}%</span> */}
+          <p className="text-[14px] font-Poppins mt-5 text-[#222] w-[90%]">
             {product.heading}
           </p>
           <div className="flex mt-6 gap-2">
