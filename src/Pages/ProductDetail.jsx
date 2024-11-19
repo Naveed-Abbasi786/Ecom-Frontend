@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import Header from "../Components/Header";
 import { Icon } from "@iconify/react";
 import Product1 from "../assets/img/pro1.jpg";
@@ -7,7 +7,7 @@ import Product3 from "../assets/img/pro3.jpg";
 import Product4 from "../assets/img/pro4.jpg";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Listbox } from "@headlessui/react";
-import { Menu, Rating } from "@mui/material";
+import { CircularProgress, Menu, Rating } from "@mui/material";
 import PropTypes from "prop-types";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -18,6 +18,7 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Box from "@mui/material/Box";
 import Products from "../Components/Products";
+import { CartContext } from "../Context/Context";
 import {Link, useParams} from 'react-router-dom'
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import Footer from "../Components/Footer";
@@ -61,8 +62,11 @@ export default function ProductDetail() {
   const [ReviewRating, setReviewRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("Black");
   const [product, setProduct] = useState([]);
-
-  
+  const { addToCart } = useContext(CartContext);
+  const [loading,setLoading]=useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState('');
+  const API_URL = "http://192.168.100.106:4000/api/auth";
   const handleChange = (event, newValue) => {
     setVal(newValue);
   };
@@ -153,6 +157,58 @@ export default function ProductDetail() {
       .email("Invalid email address")
       .required("Email is required"),
   });
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_URL}/user-details`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setUser(response.data);
+        setIsLoggedIn(true);
+        console.log(response.data)
+      } catch (error) {
+        setIsLoggedIn(false);
+        console.log(error)
+      }
+    };
+
+    fetchUserData();
+  }, [isLoggedIn]);
+
+  const handleAddToCart = async(product) => {
+    if (!isLoggedIn) {
+       alert('please Login')
+      return;
+    }
+    const cart={
+      productId:product._id,
+      userId:user._id,
+      quantity:quantity
+    }
+    console.log(cart)
+    try {
+      setLoading(true)
+      const response = await axios.post(
+        `http://192.168.100.106:4000/api/cart/add`,cart
+      )
+      addToCart(product);
+      console.log('succes')
+    } catch (error) {
+      setLoading(false)
+      console.log(error)
+    }
+    finally{
+      setLoading(false)
+    }
+  };
   return (
     <div>
       <Header />
@@ -273,9 +329,9 @@ export default function ProductDetail() {
               (5 Reviews)
             </span>
           </div>
-          <del className="text-[27px] font-Poppins leading-[28px] text-[#222] mt-8">${product.price}</del>
-          <h3 className="text-[18px] font-Poppins leading-[28px] text-red-300  ">{product.discountedPrice}</h3>
-          {/* <span className="text-[14px] font-Poppins leading-[28px] px-4">{product.discount}%</span> */}
+          <h3 className="text-[27px] font-Poppins leading-[28px]  text-[#5EC1A1]  mt-8">${product.discountedPrice?.toFixed(0)}</h3>
+          <del className="text-[18px] font-Poppins leading-[28px] text-[#222] ">{product.price}</del>
+          <span className="text-[18px] font-Poppins leading-[28px] px-3 text-[#222]">{product.discount}%</span>
           <p className="text-[14px] font-Poppins mt-5 text-[#222] w-[90%]">
             {product.heading}
           </p>
@@ -330,12 +386,17 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            <div className="lg:ml-8 md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center">
+            <div onClick={() => handleAddToCart(product)} className="lg:ml-8 cursor-pointer md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center">
+            
+          {loading  ? <CircularProgress size={35} color="white"/> :   <>
               <Icon
                 icon="iconoir:add-to-cart"
                 className="text-white text-[20px]"
-              />
-              <span className="text-white font-Poppins">Add to Cart</span>
+                />
+              <span className="text-white font-Poppins" >'Add to Cart'</span>
+                </>
+          }
+        
             </div>
           </div>
           <div className="flex gap-4 mt-4">

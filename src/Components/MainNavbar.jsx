@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import { Icon } from "@iconify/react";
@@ -10,6 +10,7 @@ import Dailog from "./Modal";
 import { useNavigate } from "react-router-dom";
 import CartSidebar from "./CartSidebar";
 import { useCart } from "../Context/Context";
+import axios from "axios";
 export default function MainNavbar() {
   const { cartItems } = useCart(); 
 
@@ -47,6 +48,8 @@ export default function MainNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const API_URL = "http://192.168.100.106:4000/api/auth";
   const navigate = useNavigate();
 
   const handleDepartmentSelect = (department) => {
@@ -91,9 +94,38 @@ export default function MainNavbar() {
   const LogoClick = () => {
     navigate("/");
   };
-  const handleCartClick = () => {
-    setIsCartSidebarOpen(true);
+
+ useEffect(() => {
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setIsLoggedIn(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/user-details`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsLoggedIn(true);
+      console.log(response.data)
+    } catch (error) {
+      setIsLoggedIn(false);
+      console.log(error)
+    } 
   };
+
+  fetchUserData();
+}, []); 
+ 
+const handleCartClick = () => {
+  if(!isLoggedIn){
+    alert('Please Login');
+    return;
+  }
+  setIsCartSidebarOpen(true);
+};
+
   const closeSidebar = () => {
     setIsCartSidebarOpen(false);
   };

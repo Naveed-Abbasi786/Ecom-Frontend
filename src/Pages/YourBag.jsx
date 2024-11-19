@@ -1,28 +1,63 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
+import Box from "@mui/material/Box";
+import LinearProgress from "@mui/material/LinearProgress";
+import Footer from "../Components/Footer";
+import Products from "../Components/Products";
+import axios from "axios";
+import { CircularProgress } from "@mui/material";
 export default function ShopingCart() {
   const [progress, setProgress] = React.useState(100);
   const [buffer, setBuffer] = React.useState(10);
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Product 1",
-      image: "https://via.placeholder.com/50",
-      price: 100,
-      quantity: 1,
-    },
-    {
-      id: 2,
-      name: "Product 2",
-      image: "https://via.placeholder.com/50",
-      price: 150,
-      quantity: 1,
-    },
-  ]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [user, setUser] = useState("");
+  const [loading, setLoading] = useState(false);
+  const API_URL = "http://192.168.100.106:4000/api/auth";
+
+  // console.log(cartItems)
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+  
+      try {
+        // Fetching user data
+        const response = await axios.get(`${API_URL}/user-details`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setUser(response.data);
+        setIsLoggedIn(true);
+  
+        // Fetching cart items after user data
+        if (response.data._id) {
+          setLoading(true);
+          const cartResponse = await axios.post(
+            `http://192.168.100.106:4000/api/cart/getcart`,
+            { userId: response.data._id }
+          );
+          setCartItems(cartResponse.data.cart.items);
+          console.log(cartResponse.data.cart.items);
+        }
+      } catch (error) {
+        setIsLoggedIn(false);
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchUserData();
+  }, []); 
+  
+  
 
   const progressRef = React.useRef(() => {});
   React.useEffect(() => {
@@ -40,29 +75,89 @@ export default function ShopingCart() {
     };
   });
 
+  const handleDelete = async (id) => {
+    const cartItemdelete = {
+      productId: id,
+      userId: user._id,
+    };
+    try {
+      const response = await axios.post(
+        `http://192.168.100.106:4000/api/cart/remove`,
+        cartItemdelete
+      );
+      console.log("delete");
+    } catch (error) {
+      alert(error);
+    }
+  };
 
+  const updateCart = async (productId, newQuantity) => {
+    try {
+      if (!isLoggedIn) {
+        alert("Please login");
+        return;
+      }
 
-  const handleQuantityChange = (id, type) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === id
-          ? {
-              ...product,
-              quantity:
-                type === "increase"
-                  ? product.quantity + 1
-                  : product.quantity - 1,
-            }
-          : product
+      const cartItem = {
+        productId,
+        userId: user._id,
+        quantity: newQuantity,
+      };
+
+      console.log("Updating Cart Item:", cartItem);
+
+      // Only update the specific product in the backend
+      const response = await axios.post(
+        `http://192.168.100.106:4000/api/cart/updatecart`,
+        cartItem
+      );
+      console.log("Cart Item Updated Successfully:", response.data);
+
+      // Backend se sirf updated cart fetch karein (optional)
+      if (response.data.success) {
+        setCartItems((prevCart) =>
+          prevCart.map((item) =>
+            item._id === productId ? { ...item, quantity: newQuantity } : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error updating cart item:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const incrementQuantity = (id, currentQuantity) => {
+    const newQuantity = currentQuantity + 1;
+
+    // Local cart state update
+    setCartItems((prevCart) =>
+      prevCart.map((item) =>
+        item._id === id ? { ...item, quantity: newQuantity } : item
       )
     );
+
+    // API call for update
+    updateCart(id, newQuantity);
   };
 
-  const handleDelete = (id) => {
-    setProducts((prevProducts) =>
-      prevProducts.filter((product) => product.id !== id)
-    );
+  const decrementQuantity = (id, currentQuantity) => {
+    if (currentQuantity > 1) {
+      const newQuantity = currentQuantity - 1;
+
+      setCartItems((prevCart) =>
+        prevCart.map((item) =>
+          item._id === id ? { ...item, quantity: newQuantity } : item
+        )
+      );
+
+      updateCart(id, newQuantity);
+    } else {
+      alert("Quantity cannot be less than 1.");
+    }
   };
+
 
   return (
     <>
@@ -105,8 +200,8 @@ export default function ShopingCart() {
           </p>
         </div>
 
-        <div className="w-[85%] h-[110vh] ml-[5%] mt-8 flex">
-          <div className="w-[70%] h-[100%]">
+        <div className="w-[85%] h-[110vh] ml-[5%] mt-8 flex lg:flex-row flex-col">
+          <div className="lg:w-[70%] w-[100%] h-[100%]">
             <div>
               <table className="w-[98%]  text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 text-[#999999] border-b ">
@@ -121,7 +216,7 @@ export default function ShopingCart() {
                       scope="col"
                       className="px-6 py-3 text-[14px] leading-[21px] font-Poppins"
                     >
-                      Price
+                      Dicount Price
                     </th>
                     <th
                       scope="col"
@@ -141,75 +236,93 @@ export default function ShopingCart() {
                     ></th>
                   </tr>
                 </thead>
-                <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id} className="bg-white border-b">
-                      <td className="px-6 mr-20 py-4 flex items-center">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-12 h-12 leading-[20px] mr-4 rounded"
-                        />
-                        <span className=" text-[16px] text-[#333333] font-Poppins">
-                          {product.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-[#212529] font-Poppins text-[14px] font-light">
-                        {product.price}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="w-[70%] border items-center flex justify-center">
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(product.id, "decrease")
-                            }
-                            className="px-3 py-2 text-[24px]  rounded-l-md hover:bg-gray-300 transition duration-200"
-                          >
-                            <Icon
-                              icon="line-md:minus"
-                              className="text-[20px]"
-                            />
-                          </button>
-
-                          <span className="px-4 text-lg">
-                            {product.quantity}
+                {loading ? (
+                  <div className="flex justify-center">
+                    <CircularProgress />
+                  </div>
+                ) : cartItems?.length === 0 ? (
+                  <div className="text-center text-gray-500 text-lg mt-4">
+                    No products available in the cart.
+                  </div>
+                ) : (
+                  <tbody>
+                    {cartItems?.map((product) => (
+                      <tr key={product.id} className="bg-white border-b">
+                        <td className="px-6 mr-20 py-4 flex items-center">
+                          <img
+                            src={`http://192.168.100.106:4000${product.product.imageUrls[0]}`}
+                            alt={product.name}
+                            className="w-12 h-12 leading-[20px] mr-4 rounded"
+                          />
+                          <span className="text-[16px] text-[#333333] font-Poppins">
+                            {product.product.name}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-[#212529] font-Poppins text-[14px] font-light">
+                          {product.product.discountedPrice?.toFixed(0)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="w-[70%] border items-center px-4 flex justify-center">
+                            <button
+                              onClick={() =>
+                                decrementQuantity(
+                                  product.product?._id,
+                                  product?.quantity
+                                )
+                              }
+                              className="px-3 py-2 text-[24px] rounded-l-md hover:bg-gray-300 transition duration-200"
+                            >
+                              <Icon
+                                icon="line-md:minus"
+                                className="text-[20px]"
+                              />
+                            </button>
 
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(product.id, "increase")
-                            }
-                            className="px-3 py-2 rounded-r-md hover:bg-gray-300 transition duration-200"
-                          >
-                            <Icon icon="line-md:plus" className="text-[20px]" />
-                          </button>
-                        </div>
-                      </td>
+                            <span className="px-4 text-lg">
+                              {product.quantity}
+                            </span>
 
-                      <td className="px-6 py-4 text-[#5EC1A1] text-[16px] leading-[29.76px] font-Poppins">
-                        {product.price * product.quantity}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-red-500 cursor-pointer"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        <Icon
-                          icon="mdi:close"
-                          className="text-[16px] leading-[29.76px] font-Poppins"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                            <button
+                              onClick={() =>
+                                incrementQuantity(
+                                  product.product?._id,
+                                  product?.quantity
+                                )
+                              }
+                              className="px-4 py-2 rounded-r-md hover:bg-gray-300 transition duration-200"
+                            >
+                              <Icon
+                                icon="line-md:plus"
+                                className="text-[20px]"
+                              />
+                            </button>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 text-[#5EC1A1] text-[16px] leading-[29.76px] font-Poppins">
+                          {product.totalPrice?.toFixed(0)}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-red-500 cursor-pointer"
+                          onClick={() => handleDelete(product.product?._id)}
+                        >
+                          <Icon
+                            icon="mdi:close"
+                            className="text-[16px] leading-[29.76px] font-Poppins"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                )}
               </table>
             </div>
             <div className="mt-4">
               <textarea
                 name=""
                 id=""
-                className="outline-none resize-none border px-4 py-2 transition duration-500 border-2 focus:border-[#5EC1A1] "
+                className="w-[98%] outline-none resize-none border px-4 py-2 transition duration-500 border-2 focus:border-[#5EC1A1] "
                 placeholder="Special Instructions for Seller"
-                cols={100}
                 rows={6}
               ></textarea>
 
@@ -226,77 +339,111 @@ export default function ShopingCart() {
             </div>
           </div>
 
-          <div className="w-[30%] h-[100vh] bg-[#F9F9F9] border-2 border-dotted ">
+          <div className="lg:w-[30%] w-[100%] h-[100vh] bg-[#F9F9F9] border-2 border-dotted ">
             <h2 className="w-[80%] mx-auto  font-Poppins text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2">
               Cart Total
             </h2>
             <div className="w-[80%] mx-auto ">
-                <h2 className=" text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2 flex justify-between 
-             leading font-Poppins">
-              <span className="text-gray-600">
-              Subtotal: 
-              </span>
-            <span className="text-[16px] text-[#111111] font-Poppins font-bold">$929.00</span>
-                </h2>
-                <h3 className="text-[#212529] py-5 font-Poppins text-[16px]">
+              <h2
+                className=" text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2 flex justify-between 
+             leading font-Poppins"
+              >
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="text-[16px] text-[#111111] font-Poppins font-bold">
+                  $929.00
+                </span>
+              </h2>
+              <h3 className="text-[#212529] py-5 font-Poppins text-[16px]">
                 Shipping
-                </h3>
-<div className="flex justify-between">
-  <div className="flex">
-  <input
-  type="radio"
-  checked
-   className="bg-green-900 border-green-500"
-/>
-     <h4 className="px-4 font-Poppins text-gray-600 text-[16px]">Standard</h4>
-  </div>
-     <h6 className="font-Poppins text-gray-600 text-[16px]">$15.70</h6>
-</div>
-<div className="flex flex-col">
-  <h5 className="text-[16px] font-Poppins text-[#212529] mt-4">
-    Estimate for Your Country
-  </h5>
-  <h6 className="text-[14px] text-[#212529] -leading-[28px] font-Poppins">
-    71500, Pakistan
-  </h6>
-  <span className="text-[14px] font-Poppins underline text-gray-600 mt-2 hover:text-[#5EC1A1] cursor-pointer">Change address</span>
-</div>
+              </h3>
+              <div className="flex justify-between">
+                <div className="flex">
+                  <input
+                    type="radio"
+                    checked
+                    className="bg-green-900 border-green-500"
+                  />
+                  <h4 className="px-4 font-Poppins text-gray-600 text-[16px]">
+                    Standard
+                  </h4>
+                </div>
+                <h6 className="font-Poppins text-gray-600 text-[16px]">
+                  $15.70
+                </h6>
+              </div>
+              <div className="flex flex-col">
+                <h5 className="text-[16px] font-Poppins text-[#212529] mt-4">
+                  Estimate for Your Country
+                </h5>
+                <h6 className="text-[14px] text-[#212529] -leading-[28px] font-Poppins">
+                  71500, Pakistan
+                </h6>
+                <span className="text-[14px] font-Poppins underline text-gray-600 mt-2 hover:text-[#5EC1A1] cursor-pointer">
+                  Change address
+                </span>
+              </div>
 
-<hr  className="border-[2px] mt-4"/>
-  <div className="flex justify-between mt-5">
-    <h2 className="text-[16px] font-Poppins text-[#5EC1A1]">Total</h2>
-    <h5 className="text-[16px] font-Poppins text-[#5EC1A1]">$944.70</h5>
-  </div>
-  <p className="leading-[26px]  text-[14px] italic	 font-Poppins font-light mt-4 text-gray-600">Taxes and Shipping calculated at checkout</p>
-  <Box sx={{ width: '100%', marginTop: '5%' }}>
-  <LinearProgress
-    variant="buffer"
-    value={progress}
-    valueBuffer={buffer}
-    sx={{
-      '& .MuiLinearProgress-bar': {
-        backgroundColor: '#5DBF9F', // Color for the progress
-      },
-      '& .MuiLinearProgress-barBuffer': {
-        backgroundColor: 'orange', // Color for the buffer
-      },
-      backgroundColor: 'lightgray', // Color for the track
-    }}
-  />
-</Box>
+              <hr className="border-[2px] mt-4" />
+              <div className="flex justify-between mt-5">
+                <h2 className="text-[16px] font-Poppins text-[#5EC1A1]">
+                  Total
+                </h2>
+                <h5 className="text-[16px] font-Poppins text-[#5EC1A1]">
+                  $944.70
+                </h5>
+              </div>
+              <p className="leading-[26px]  text-[14px] italic	 font-Poppins font-light mt-4 text-gray-600">
+                Taxes and Shipping calculated at checkout
+              </p>
+              <Box sx={{ width: "100%", marginTop: "5%" }}>
+                <LinearProgress
+                  variant="buffer"
+                  value={progress}
+                  valueBuffer={buffer}
+                  sx={{
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: "#5DBF9F", // Color for the progress
+                    },
+                    "& .MuiLinearProgress-barBuffer": {
+                      backgroundColor: "orange", // Color for the buffer
+                    },
+                    backgroundColor: "lightgray", // Color for the track
+                  }}
+                />
+              </Box>
 
-<p className="leading-[26px]  text-[14px]  font-Poppins font-light mt-4 text-gray-600">Congratulations! You've got free shipping!</p>
-<div className="mt-2 gap-2 flex">
-            <input type="checkbox" name="" id="" className="cursor-pointer" />
-            <span className="text-[#666666] font-Poppins text-[14px]">
-              I accept the <span className="text-blue-500 cursor-pointer hover:text-blue-400 hover:underline">Terms</span> /{" "}
-              <span className="text-blue-500 cursor-pointer hover:text-blue-400 hover:underline">Privacy Policy.</span>
-            </span>
-          </div>
-          <button className="w-full mt-2 bg-[#5EC1A1] hover:bg-[#6fc7ab] text-white px-2 py-2">Process To checkout</button>
+              <p className="leading-[26px]  text-[14px]  font-Poppins font-light mt-4 text-gray-600">
+                Congratulations! You've got free shipping!
+              </p>
+              <div className="mt-2 gap-2 flex">
+                <input
+                  type="checkbox"
+                  name=""
+                  id=""
+                  className="cursor-pointer"
+                />
+                <span className="text-[#666666] font-Poppins text-[14px]">
+                  I accept the{" "}
+                  <span className="text-blue-500 cursor-pointer hover:text-blue-400 hover:underline">
+                    Terms
+                  </span>{" "}
+                  /{" "}
+                  <span className="text-blue-500 cursor-pointer hover:text-blue-400 hover:underline">
+                    Privacy Policy.
+                  </span>
+                </span>
+              </div>
+              <button className="w-full mt-2 bg-[#5EC1A1] hover:bg-[#6fc7ab] text-white px-2 py-2">
+                Process To checkout
+              </button>
             </div>
           </div>
         </div>
+      </div>
+
+      <Products />
+      <div className="mt-24">
+        <Footer />
       </div>
     </>
   );

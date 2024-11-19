@@ -56,6 +56,7 @@ export default function MyModal() {
       }
 
       try {
+        setLoading(true)
         const response = await axios.get(`${API_URL}/user-details`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -64,7 +65,11 @@ export default function MyModal() {
         setIsLoggedIn(true);
         console.log(response.data)
       } catch (error) {
+        setLoading(false)
         setIsLoggedIn(false);
+      }
+      finally{
+        setLoading(false)
       }
     };
 
@@ -208,18 +213,21 @@ export default function MyModal() {
     {isLoggedIn ? 
      <>
      <Avatar
-      sx={{
-        cursor: 'pointer',
-        border: 'solid red', 
-        marginTop: '-5%',
-        bgcolor: avatarSrc ? 'transparent' : deepOrange[500],
-      }}
-      alt={user?.name}
-      src={avatarSrc}  
-      onClick={handleAvatarClick}
-    >
-      {!avatarSrc && firstLetter}
-    </Avatar>
+  sx={{
+    cursor: 'pointer',
+    marginTop: '-5%',
+    bgcolor: avatarSrc ? 'transparent' : deepOrange[500],
+  }}
+  alt={user?.name}
+  src={avatarSrc}
+  onClick={handleAvatarClick}
+>
+  {loading
+    ?<CircularProgress size={20} color="white"/>
+    : !avatarSrc && firstLetter 
+  }
+</Avatar>
+
      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleAvatarClose}>
        <MenuItem onClick={hanldeProfile}>Profile</MenuItem>
        <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
