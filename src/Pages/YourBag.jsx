@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Header from "../Components/Header";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -8,56 +8,17 @@ import Footer from "../Components/Footer";
 import Products from "../Components/Products";
 import axios from "axios";
 import { CircularProgress } from "@mui/material";
+import toast, { Toaster } from "react-hot-toast";
 export default function ShopingCart() {
   const [progress, setProgress] = React.useState(100);
   const [buffer, setBuffer] = React.useState(10);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState("");
+  const [cartTotal, setCartTotal] = useState(null);
   const [loading, setLoading] = useState(false);
   const API_URL = "http://192.168.100.106:4000/api/auth";
-
-  // console.log(cartItems)
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        setIsLoggedIn(false);
-        return;
-      }
-  
-      try {
-        // Fetching user data
-        const response = await axios.get(`${API_URL}/user-details`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
-        setUser(response.data);
-        setIsLoggedIn(true);
-  
-        // Fetching cart items after user data
-        if (response.data._id) {
-          setLoading(true);
-          const cartResponse = await axios.post(
-            `http://192.168.100.106:4000/api/cart/getcart`,
-            { userId: response.data._id }
-          );
-          setCartItems(cartResponse.data.cart.items);
-          console.log(cartResponse.data.cart.items);
-        }
-      } catch (error) {
-        setIsLoggedIn(false);
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchUserData();
-  }, []); 
-  
-  
+  const navigate = useNavigate();
 
   const progressRef = React.useRef(() => {});
   React.useEffect(() => {
@@ -75,6 +36,46 @@ export default function ShopingCart() {
     };
   });
 
+  const CheckOut = () => {
+    navigate("/check-out");
+  };
+
+  const fetchUserData = useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setIsLoggedIn(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/user-details`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUser(response.data);
+      setIsLoggedIn(true);
+
+      if (response.data._id) {
+        setLoading(true);
+        const cartResponse = await axios.post(
+          `http://192.168.100.106:4000/api/cart/getcart`,
+          { userId: response.data._id }
+        );
+        setCartItems(cartResponse.data.cart.items);
+        setCartTotal(cartResponse.data.cartTotal);
+      }
+    } catch (error) {
+      setIsLoggedIn(false);
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
   const handleDelete = async (id) => {
     const cartItemdelete = {
       productId: id,
@@ -85,7 +86,9 @@ export default function ShopingCart() {
         `http://192.168.100.106:4000/api/cart/remove`,
         cartItemdelete
       );
-      console.log("delete");
+
+      fetchUserData();
+      toast.success("You successfully delete");
     } catch (error) {
       alert(error);
     }
@@ -104,16 +107,12 @@ export default function ShopingCart() {
         quantity: newQuantity,
       };
 
-      console.log("Updating Cart Item:", cartItem);
-
-      // Only update the specific product in the backend
       const response = await axios.post(
         `http://192.168.100.106:4000/api/cart/updatecart`,
         cartItem
       );
       console.log("Cart Item Updated Successfully:", response.data);
-
-      // Backend se sirf updated cart fetch karein (optional)
+      fetchUserData();
       if (response.data.success) {
         setCartItems((prevCart) =>
           prevCart.map((item) =>
@@ -131,14 +130,12 @@ export default function ShopingCart() {
   const incrementQuantity = (id, currentQuantity) => {
     const newQuantity = currentQuantity + 1;
 
-    // Local cart state update
     setCartItems((prevCart) =>
       prevCart.map((item) =>
         item._id === id ? { ...item, quantity: newQuantity } : item
       )
     );
 
-    // API call for update
     updateCart(id, newQuantity);
   };
 
@@ -158,10 +155,12 @@ export default function ShopingCart() {
     }
   };
 
-
   return (
     <>
-      <Header />
+      <Toaster position="top-right" reverseOrder={false} />
+      <div className="w-[100%]">
+        <Header />
+      </div>
       <div>
         <div className="w-full h-[30vh] bg-[#F6F6F6] flex justify-center items-center">
           <div>
@@ -200,10 +199,10 @@ export default function ShopingCart() {
           </p>
         </div>
 
-        <div className="w-[85%] h-[110vh] ml-[5%] mt-8 flex lg:flex-row flex-col">
+        <div className="w-[85%] h-[full] ml-[5%] mt-8 flex lg:flex-row flex-col">
           <div className="lg:w-[70%] w-[100%] h-[100%]">
-            <div>
-              <table className="w-[98%]  text-sm text-left text-gray-500">
+            <div className="w-[90%]  overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 text-[#999999] border-b ">
                   <tr>
                     <th
@@ -236,17 +235,26 @@ export default function ShopingCart() {
                     ></th>
                   </tr>
                 </thead>
-                {loading ? (
-                  <div className="flex justify-center">
-                    <CircularProgress />
-                  </div>
-                ) : cartItems?.length === 0 ? (
-                  <div className="text-center text-gray-500 text-lg mt-4">
-                    No products available in the cart.
-                  </div>
-                ) : (
-                  <tbody>
-                    {cartItems?.map((product) => (
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="text-center py-10">
+                        <div className="flex justify-center">
+                          <CircularProgress />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : cartItems?.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="text-center text-gray-500 text-lg py-10"
+                      >
+                        No products available in the cart.
+                      </td>
+                    </tr>
+                  ) : (
+                    cartItems?.map((product) => (
                       <tr key={product.id} className="bg-white border-b">
                         <td className="px-6 mr-20 py-4 flex items-center">
                           <img
@@ -298,7 +306,6 @@ export default function ShopingCart() {
                             </button>
                           </div>
                         </td>
-
                         <td className="px-6 py-4 text-[#5EC1A1] text-[16px] leading-[29.76px] font-Poppins">
                           {product.totalPrice?.toFixed(0)}
                         </td>
@@ -312,9 +319,9 @@ export default function ShopingCart() {
                           />
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                )}
+                    ))
+                  )}
+                </tbody>
               </table>
             </div>
             <div className="mt-4">
@@ -339,7 +346,7 @@ export default function ShopingCart() {
             </div>
           </div>
 
-          <div className="lg:w-[30%] w-[100%] h-[100vh] bg-[#F9F9F9] border-2 border-dotted ">
+          <div className="lg:w-[30%] w-[100%] h-full bg-[#F9F9F9] border-2 border-dotted  lg:mt-0 mt-6">
             <h2 className="w-[80%] mx-auto  font-Poppins text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2">
               Cart Total
             </h2>
@@ -350,7 +357,7 @@ export default function ShopingCart() {
               >
                 <span className="text-gray-600">Subtotal:</span>
                 <span className="text-[16px] text-[#111111] font-Poppins font-bold">
-                  $929.00
+                  {cartTotal}
                 </span>
               </h2>
               <h3 className="text-[#212529] py-5 font-Poppins text-[16px]">
@@ -389,7 +396,7 @@ export default function ShopingCart() {
                   Total
                 </h2>
                 <h5 className="text-[16px] font-Poppins text-[#5EC1A1]">
-                  $944.70
+                  {cartTotal}
                 </h5>
               </div>
               <p className="leading-[26px]  text-[14px] italic	 font-Poppins font-light mt-4 text-gray-600">
@@ -433,7 +440,10 @@ export default function ShopingCart() {
                   </span>
                 </span>
               </div>
-              <button className="w-full mt-2 bg-[#5EC1A1] hover:bg-[#6fc7ab] text-white px-2 py-2">
+              <button
+                onClick={CheckOut}
+                className="w-full mb-6 mt-4  bg-[#5EC1A1] hover:bg-[#6fc7ab] text-white px-2 py-2"
+              >
                 Process To checkout
               </button>
             </div>

@@ -1,84 +1,123 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Product from "../assets/img/product3.jpg";
-
 import {
   TextField,
   Button,
   Grid,
   Autocomplete,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 import Footer from "../Components/Footer";
+import toast, { Toaster } from "react-hot-toast";
 
 // Yup Validation Schema
 const validationSchema = Yup.object({
   firstName: Yup.string().required("First Name is required"),
   lastName: Yup.string().required("Last Name is required"),
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  city: Yup.string().required("City is required"),
+  contactnumber: Yup.number().positive().required("ContactNumber is required"),
   country: Yup.string().required("Country is required"),
   state: Yup.string().required("State is required"),
-  province: Yup.string().required("Province is required"),
-  zipcode: Yup.string().required("Zipcode is required"),
+  Address: Yup.string().required("Address is required"),
+  zipcode: Yup.string().required("Zip Code is required"),
   paymentMethod: Yup.string().required("Payment Method is required"),
 });
+
 export default function CheckOut() {
-  const [cartItems, setCartItems] = useState([]);
-  const [user, setUser] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [user, setUser] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cartTotal, setCartTotal] = useState(null);
   const API_URL = "http://192.168.100.106:4000/api/auth";
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        setIsLoggedIn(false);
-        return;
-      }
+  const notifySuccess = (message) => toast.success(message);
+  const notifyError = (message) => toast.error(message);
 
-      try {
-        const response = await axios.get(`${API_URL}/user-details`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const fetchUserData = useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setIsLoggedIn(false);
+      return;
+    }
 
-        setUser(response.data);
-        setIsLoggedIn(true);
-      } catch (error) {
-        setIsLoggedIn(false);
-        console.log(error);
-      }
-    };
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/user-details`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    fetchUserData();
-  }, [isLoggedIn]);
+      setUser(response.data);
+      setIsLoggedIn(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user._id) return;
-      try {
+      if (response.data._id) {
         setLoading(true);
-        const response = await axios.post(
+        const cartResponse = await axios.post(
           `http://192.168.100.106:4000/api/cart/getcart`,
-          { userId: user._id }
+          { userId: response.data._id }
         );
-        setCartItems(response.data.items);
-        // console.log(response.data)
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+        setCartItems(cartResponse.data.cart.items);
+        setCartTotal(Math.trunc(cartResponse.data.cartTotal));
+        console.log(cartResponse.data.cart.items);
       }
+    } catch (error) {
+      setLoading(False);
+      setIsLoggedIn(false);
+      console.log(error);
+    } finally {
+      setLoading(false);
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const handleCheckOut = async (values, resetForm) => {
+    const form = {
+      name: `${values.firstName} ${values.lastName}`,
+      email: values.email,
+      contactNumber: values.contactnumber,
+      billingAddress: values.Address,
+      city: values.city,
+      state: values.state,
+      zipCode: values.zipcode,
+      paymentMethod: values.paymentMethod,
+      totalAmount: cartTotal,
+      products: cartItems.map((item) => ({
+        productId: item.product._id,
+        quantity: Number(item.quantity),
+      })),
     };
 
-    fetchData();
-  }, [user]);
+    console.log(form);
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "http://192.168.100.106:4000/api/checkout/create",
+        form
+      );
+      notifySuccess("Order placed successfully!");
+      setCartItems([]);
+      setCartTotal("");
+      resetForm();
+    } catch (error) {
+      setLoading(false);
+      console.log("Error:", error);
+      notifyError("Failed to place order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const State = [{ name: "Sindh " }, { name: "Punjab" }, { name: "Kpk" }];
   const Country = [
@@ -87,9 +126,10 @@ export default function CheckOut() {
     { name: "Dubai" },
   ];
   const PaymentMehotd = [
-    { name: "EasyPesa" },
+    { name: "EasyPaisa" },
     { name: "JazzCash" },
     { name: "BankAccount" },
+    { name: "Cash on Delivery" },
   ];
   const PaymentMethodDetails = {
     EasyPesa:
@@ -107,6 +147,8 @@ export default function CheckOut() {
   return (
     <>
       <Header />
+      <Toaster position="top-right" reverseOrder={false} />
+      {/* <ToastContainer /> */}
       <div>
         <div className="w-full h-[30vh] bg-[#F6F6F6] flex justify-center items-center">
           <div>
@@ -137,23 +179,25 @@ export default function CheckOut() {
         </div>
       </div>
 
-      <div className="w-[85%] h-[110vh] ml-[5%] mt-8 flex lg:flex-row flex-col">
-        <div className="lg:w-[70%] w-[100%] h-[100%]">
-          <div className="w-[97%]">
+      <div className="w-[85%] h-full ml-[5%] mt-8 flex lg:flex-row flex-col">
+        <div className="lg:w-[70%] w-[100%]  h-[100%]">
+          <div className="w-[97%] h-full">
             <Formik
               initialValues={{
                 firstName: "",
                 lastName: "",
                 email: "",
+                city: "",
+                contactnumber: "",
                 country: "",
                 state: "",
-                province: "",
+                Address: "",
                 zipcode: "",
                 paymentMethod: "",
               }}
               validationSchema={validationSchema}
-              onSubmit={(values) => {
-                console.log("Form Data:", values);
+              onSubmit={(values, { resetForm }) => {
+                handleCheckOut(values, resetForm);
               }}
             >
               {({ setFieldValue, values, touched, errors }) => (
@@ -210,6 +254,27 @@ export default function CheckOut() {
                       />
                     </Grid>
 
+                    {/* contactnumber*/}
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="contactnumber"
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Contact Number"
+                            fullWidth
+                            error={
+                              touched.contactnumber &&
+                              Boolean(errors.contactnumber)
+                            }
+                            helperText={
+                              touched.contactnumber && errors.contactnumber
+                            }
+                          />
+                        )}
+                      />
+                    </Grid>
+
                     {/* Country */}
                     <Grid item xs={12} sm={6}>
                       <Field name="country">
@@ -241,6 +306,21 @@ export default function CheckOut() {
                         )}
                       </Field>
                     </Grid>
+                    {/* City */}
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="city"
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="City"
+                            fullWidth
+                            error={touched.city && Boolean(errors.city)}
+                            helperText={touched.city && errors.city}
+                          />
+                        )}
+                      />
+                    </Grid>
 
                     {/* State */}
                     <Grid item xs={12} sm={6}>
@@ -270,17 +350,16 @@ export default function CheckOut() {
                       </Field>
                     </Grid>
 
-                    {/* Address (Province) */}
                     <Grid item xs={12}>
                       <Field
-                        name="province"
+                        name="Address"
                         render={({ field }) => (
                           <TextField
                             {...field}
-                            label="Address (Province)"
+                            label="Address"
                             fullWidth
-                            error={touched.province && Boolean(errors.province)}
-                            helperText={touched.province && errors.province}
+                            error={touched.Address && Boolean(errors.Address)}
+                            helperText={touched.Address && errors.Address}
                           />
                         )}
                       />
@@ -355,8 +434,13 @@ export default function CheckOut() {
                         variant="contained"
                         color="primary"
                         fullWidth
+                        sx={{ marginBottom: "5%" }}
                       >
-                        Submit Order
+                        {loading ? (
+                          <CircularProgress size={24} sx={{ color: "wheat" }} />
+                        ) : (
+                          "Submit Order"
+                        )}
                       </Button>
                     </Grid>
                   </Grid>
@@ -366,15 +450,18 @@ export default function CheckOut() {
           </div>
         </div>
 
-        <div className="lg:w-[30%] w-[100%] h-[70vh] bg-[#F9F9F9] border-2 border-dotted">
+        <div className="lg:w-[30%] w-[100%] lg:mb-0 mb-10 h-[57%] bg-[#F9F9F9]  lg:mt-0 mt-10  border-2 border-dotted">
           <div>
             <h2 className="w-[80%] mx-auto  font-Poppins text-[#333333] leading-[17px] py-5 font-bold border-b-2">
               Your Cart Products
             </h2>
             <div className="w-full max-h-[40vh] mt-4 h-auto overflow-y-auto">
-              {cartItems.map((val, idx) => (
-                <>
-                  {/* {console.log("My clg" , val.product.discountedPrice.reduce((prev , next) => prev + next))} */}
+              {loading ? ( // Show loader when loading
+                <div className="flex justify-center items-center h-full">
+                  <span className="text-lg font-Poppins">Loading...</span>
+                </div>
+              ) : cartItems.length > 0 ? ( // Show cart items if available
+                cartItems.map((val, idx) => (
                   <div key={idx} className="w-full px-4 mt-2 flex">
                     <img
                       src={`http://192.168.100.106:4000${val.product.imageUrls[0]}`}
@@ -385,21 +472,30 @@ export default function CheckOut() {
                       <h3 className="font-Poppins text-[#333333]">
                         {val.product.name}
                       </h3>
+                      <h3 className="font-Poppins text-[#333333]">
+                        ({val.quantity})
+                      </h3>
                       <h5 className="font-Poppins text-[#333333]">
                         ${val.product.discountedPrice?.toFixed(0)}
                       </h5>
                     </div>
                   </div>
-                </>
-              ))}
+                ))
+              ) : (
+                <div className="flex justify-center items-center h-full">
+                  <span className="text-lg font-Poppins">
+                    No items in the cart
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="w-[80%] mt-6 mx-auto">
-            <h2 className="text-[#333333] font-Poppins py-5 font-bold border-b-2 flex justify-between">
+          <div className="w-[80%] mt-6  mx-auto">
+            <h2 className="text-[#333333] font-Poppins py-5 font-bold border-t-2 flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
               <span className="text-[16px] text-[#111111] font-Poppins font-bold">
-                $3667
+                ${cartTotal}
               </span>
             </h2>
           </div>

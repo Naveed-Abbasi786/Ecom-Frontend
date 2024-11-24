@@ -63,7 +63,6 @@ export default function MyModal() {
 
         setUser(response.data);
         setIsLoggedIn(true);
-        console.log(response.data)
       } catch (error) {
         setLoading(false)
         setIsLoggedIn(false);
@@ -132,10 +131,8 @@ export default function MyModal() {
       const imageFile = newImages; 
       userData.append("profileImage", imageFile);
     }
-     setEmail(values.email)
+     setEmail(values.email) 
     setFormValues(values);
-    console.log(userData);
-  
     try {
       setLoading(true);
       const response = await axios.post(`${API_URL}/signup`, userData, {
@@ -143,6 +140,7 @@ export default function MyModal() {
           "Content-Type": "multipart/form-data",
         },
       });
+      setProfileImage('')
       notifySuccess("Verify OTP");
       setIsOtp(true);
       setTimer(300);
@@ -190,10 +188,16 @@ export default function MyModal() {
   const navigate = useNavigate();
 
   const hanldeProfile =()=>{
-    navigate('/dashboard')
+    if(user.role==='admin'){
+      navigate('/dashboard')
+    }
+    else{
+      navigate('/UserdashboradLayout')
+    }
   }
   const handleForgetPassword = (values) => {
-    navigate('/ForgetPasswrod');
+    
+    navigate('/forget-passwrod');
   };
 
   const open = () => setIsOpen(true);
@@ -244,10 +248,10 @@ export default function MyModal() {
    
       
 
-      <Dialog open={isOpen} as="div" className="relative z-10" onClose={close}>
+      <Dialog open={isOpen} as="div" className="relative z-50" onClose={close}>
         <ToastContainer />
         <div className="fixed inset-0 bg-black bg-opacity-50" aria-hidden="true" />
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto ">
           <div className="flex min-h-full items-center justify-center p-7">
             <DialogPanel className="relative w-full max-w-md rounded-xl bg-white p-6 backdrop-blur-3xl">
               <Icon icon="line-md:menu-to-close-alt-transition" onClick={close} className="absolute top-4 right-4 text-gray-600 cursor-pointer" style={{ fontSize: "24px" }} />

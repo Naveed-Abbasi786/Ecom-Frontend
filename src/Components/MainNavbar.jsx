@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import { Icon } from "@iconify/react";
@@ -11,10 +11,9 @@ import { useNavigate } from "react-router-dom";
 import CartSidebar from "./CartSidebar";
 import { useCart } from "../Context/Context";
 import axios from "axios";
+import { CartContext } from "../Context/Context";
 export default function MainNavbar() {
-  const { cartItems } = useCart(); 
-
-  const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  
   const Departments = [
     { Name: "All Departments" },
     { Name: "Fashion" },
@@ -48,6 +47,9 @@ export default function MainNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false);
+  // const [cartItems,setCartItems]=useState([])
+  const { cartItems } = useContext(CartContext); 
+  const [user, setUser] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const API_URL = "http://192.168.100.106:4000/api/auth";
   const navigate = useNavigate();
@@ -95,34 +97,47 @@ export default function MainNavbar() {
     navigate("/");
   };
 
- useEffect(() => {
-  const fetchUserData = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setIsLoggedIn(false);
-      return;
-    }
-
-    try {
-      const response = await axios.get(`${API_URL}/user-details`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setIsLoggedIn(true);
-      console.log(response.data)
-    } catch (error) {
-      setIsLoggedIn(false);
-      console.log(error)
-    } 
-  };
-
-  fetchUserData();
-}, []); 
+  // const fetchUserData = useCallback(async () => {
+  //   const token = localStorage.getItem("authToken");
+  //   if (!token) {
+  //     setIsLoggedIn(false);
+  //     return;
+  //   }
+  
+  //   try {
+  //     const response = await axios.get(`${API_URL}/user-details`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  
+  //     setUser(response.data);
+  //     setIsLoggedIn(true);
+  
+  //     if (response.data._id) {
+  //       setLoading(true);
+  //       const cartResponse = await axios.post(
+  //         `http://192.168.100.106:4000/api/cart/getcart`,
+  //         { userId: response.data._id }
+  //       );
+  
+  //       const items = cartResponse.data.cart?.items || []; 
+  //       setCartItems(items);
+  //     }
+  //   } catch (error) {
+  //     setIsLoggedIn(false);
+  //     console.error(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
+  
+  // useEffect(() => {
+  //   fetchUserData();
+  // }, []);
  
+
+
 const handleCartClick = () => {
-  if(!isLoggedIn){
-    alert('Please Login');
-    return;
-  }
+
   setIsCartSidebarOpen(true);
 };
 
@@ -130,7 +145,7 @@ const handleCartClick = () => {
     setIsCartSidebarOpen(false);
   };
   return (
-    <div className="w-full py-4 bg-sky-00 flex flex-col justify-between items-center">
+    <div className="w-full sticky z-40 top-0 left-0 bg-white py-4 bg-sky-00 flex flex-col justify-between items-center">
       {/* Large screen Navbar */}
       <div className="flex justify-between w-full">
         {/* Existing Navbar Content */}
@@ -144,7 +159,7 @@ const handleCartClick = () => {
             </h1>
           </div>
 
-          <div className="w-[40%] lg:flex hidden bg-[#F8F8F8] items-center border relative">
+          <div className="w-[40%] h-[8vh] lg:flex hidden bg-[#F8F8F8] items-center border relative">
             <input
               type="text"
               placeholder="Search in..."
@@ -202,7 +217,7 @@ const handleCartClick = () => {
             </button>
           </div>
 
-          <div className="lg:mr-20 mr-5 flex flex-row items-center gap-4">
+          <div className="lg:mr-20 mr-5 flex flex-row items-center gap-2">
             <button onClick={toggleSidebar} className="lg:hidden flex flex-z">
               <Icon icon="mdi:menu" className="text-3xl text-gray-600" />
             </button>
@@ -231,7 +246,7 @@ const handleCartClick = () => {
                 onClick={handleCartClick}
               >
                 <Badge
-                  badgeContent={cartItems.length}
+                  badgeContent={cartItems?.length || 0}
                   sx={{
                     "& .MuiBadge-dot": { backgroundColor: "#1cc0a0" },
                     "& .MuiBadge-standard": { backgroundColor: "#1cc0a0" },

@@ -25,6 +25,9 @@ import Footer from "../Components/Footer";
 import { useNavigate } from "react-router-dom";
 import Products from "../Components/Products";
 import CollectionProducts from "../Components/CollectionProducts";
+import MainNavbar from "../Components/MainNavbar";
+import MiniNavbar from "../Components/MiniNavbar";
+import Navbar from "../Components/Navbar";
 
 export default function HomePage({ productData }) {
 
@@ -95,7 +98,10 @@ export default function HomePage({ productData }) {
   };
   return (
     <div>
-      <Header />
+      <MiniNavbar/>
+      <MainNavbar/>
+      <Navbar/>
+      {/* <Header /> */}
       <HeroSection />
       <SlideLogos />
       {/* TopCategories */}

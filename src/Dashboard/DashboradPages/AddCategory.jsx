@@ -17,25 +17,35 @@ const validationSchema = Yup.object({
 });
 
 const AddCategory = () => {
-  const API_URL = "http://192.168.100.106:4000/api/cat";
+  const API_URL = "http://192.168.100.106:4000/api";
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
   const [laoding, setLoading] = useState(false);
-  const [load,setLoad]=useState(false)
+  const [load, setLoad] = useState(false);
   const [categories, setCategories] = React.useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
+  const token = localStorage.getItem("authToken");
 
-  const hanldeAddCategory = async (values) => {
+  const handleAddCategory = async (values) => {
     const name = values.categoryName;
     console.log(values);
+
     try {
       setLoading(true);
-      await axios.post(`${API_URL}/category`, { name: name });
-      notifySuccess("Succuesfuly category add");
+      await axios.post(
+        `${API_URL}/admin/category`,
+        { name: name },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      notifySuccess("Successfully added category");
     } catch (error) {
-      setLoading(false);
       console.log(error);
-      notifyError(error);
+      notifyError(
+        "Error adding category: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -45,8 +55,15 @@ const AddCategory = () => {
     try {
       setLoad(true);
       await axios.post(
-        "http://192.168.100.106:4000/api/cat/category/subcategory",
-        { name: values.subcategoryName, categoryId: selectedCategoryId }
+        "http://192.168.100.106:4000/api/admin/subcategory",
+        { 
+          name: values.subcategoryName, 
+          categoryId: selectedCategoryId 
+        },
+        {
+          headers: { Authorization:
+          `Bearer ${token}` },
+        }
       );
       notifySuccess("Succesfuly Add");
     } catch (error) {
@@ -60,8 +77,9 @@ const AddCategory = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/category`);
-        setCategories(response.data);
+        const response = await axios.get(`http://192.168.100.106:4000/api/cat/categories`);
+        setCategories(response?.data.categories);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -77,9 +95,6 @@ const AddCategory = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-
-
-
   return (
     <div className="flex">
       <ToastContainer />
@@ -93,7 +108,7 @@ const AddCategory = () => {
           validationSchema={Yup.object({
             categoryName: Yup.string().required("Category name is required"),
           })}
-          onSubmit={hanldeAddCategory}
+          onSubmit={handleAddCategory}
         >
           {({ setFieldValue, errors, touched }) => (
             <Form className="space-y-5">
@@ -141,11 +156,11 @@ const AddCategory = () => {
             <Form className="space-y-5">
               <Autocomplete
                 options={categories}
-                getOptionLabel={(option) => option.name || ""}
+                getOptionLabel={(option) => option?.name || ""}
                 onChange={(event, newValue) => {
                   setFieldValue("category", newValue);
                   if (newValue) {
-                    setSelectedCategoryId(newValue._id);
+                    setSelectedCategoryId(newValue?._id);
                     console.log("Selected Category ID:", newValue._id);
                   }
                 }}

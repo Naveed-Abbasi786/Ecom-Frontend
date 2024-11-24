@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaBars, FaChevronDown } from "react-icons/fa";
 import Img1 from "../assets/img/img1.png";
 import { IoClose } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -30,18 +31,16 @@ const Navbar = () => {
   };
 
   return (
-    <header className="lg:block hidden text-colorWhite">
-      <div className="flex  justify-between items-center relative p-4 max-w-screen-xl mx-auto">
+    <header className={`lg:block hidden text-colorWhite`}>
+      <div className="flex  justify-between items-center relative p- max-w-screen-xl mx-auto">
         <div
-            onClick={toggleCategories}
-             className="relative w-[23%] py-3 justify-center gap-2 cursor-pointer flex hover:bg-[#5EC1A1] hover:text-white items-center">
+          onClick={toggleCategories}
+          className="relative w-[23%] py-3 justify-center gap-2 cursor-pointer flex hover:bg-[#5EC1A1] hover:text-white items-center"
+        >
           {/* Icon toggle */}
           {showCategories ? <IoClose size={24} /> : <FaBars size={24} />}
 
-          <button
-            className="text-xl font-bold flex items-center"
-        
-          >
+          <button className="text-xl font-bold flex items-center">
             Browse Categories
           </button>
           {showCategories && (
@@ -70,15 +69,15 @@ const Navbar = () => {
           {["Home", "Pages", "Shop", "Products", "Blogs"].map((item, index) => (
             <div
               key={index}
-              className="group relative cursor-pointer"
+              className="group py-4 relative cursor-pointer"
               onMouseEnter={() => handleDropdownToggle(item)}
               onMouseLeave={() => handleDropdownToggle(null)}
             >
               <div className="flex items-center space-x-2">
                 <span>{item}</span>
-                {item !== "Home" && item !== "Blogs" && (
+                {item !== "Home" && (
                   <FaChevronDown
-                    className={`transition-transform duration-200 ${
+                    className={`transition-transform duration-200  duration-200 group-hover:rotate-180 ${
                       activeDropdown === item ? "rotate-180" : ""
                     }`}
                   />
@@ -86,7 +85,7 @@ const Navbar = () => {
               </div>
               {/* Dropdown Menu */}
               {item !== "Home" && activeDropdown === item && (
-                <div className="absolute -left-[150%] top-[6vh] left-0 z-50 bg-white text-black shadow-lg p-4 transition-opacity duration-300">
+                <div className="absolute -left-[150%] top-[100%] left-0 z-50 bg-white text-black shadow-lg p-4 transition-opacity duration-300">
                   {item === "Shop" ? (
                     <div className="w-[43vw] flex flex-row gap-4">
                       <ul className="text-sm space-y-1">
@@ -180,6 +179,18 @@ const Navbar = () => {
                         </li>
                       </ul>
                     </div>
+                  ) : item === "Blogs" ? (
+                    <div className="w-[10vw] flex flex-col space-y-2">
+                      <p className="font-semibold text-gray-700">Blog Pages</p>
+                      <ul className="text-sm space-y-1">
+                        <li className="text-gray-400 hover:text-gray-600 py-1 Font-Poppins">
+                          <Link to="/blog-listing">Blog listing</Link>
+                        </li>
+                        <li className="text-gray-400 hover:text-gray-600 py-1 Font-Poppins">
+                          blog Grid
+                        </li>
+                      </ul>
+                    </div>
                   ) : null}
                 </div>
               )}
@@ -201,7 +212,7 @@ const Navbar = () => {
                       <span>{item}</span>
                       {item !== "Home" && (
                         <FaChevronDown
-                          className={`transition-transform ${
+                          className={`transition-transform"${
                             activeDropdown === item ? "rotate-180" : ""
                           }`}
                         />

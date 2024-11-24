@@ -20,7 +20,9 @@ const validationSchema = Yup.object({
     .positive("Price must be positive"),
   discountPercantage: Yup.number().positive("Discount price must be positive"),
   description: Yup.string().required("Requird the Discription"),
-  Quantity:Yup.number().required("Requird Quanity").positive('must be positive'),
+  Quantity: Yup.number()
+    .required("Requird Quanity")
+    .positive("must be positive"),
   // category:Yup.required('Requird Category'),
   // Subcategory:Yup.required('Requird Category'),
 });
@@ -35,14 +37,14 @@ const AddProducts = () => {
   const [loading, setLoading] = useState(false);
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
-  
+  const token = localStorage.getItem("authToken");
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "http://192.168.100.106:4000/api/cat/category"
+          "http://192.168.100.106:4000/api/cat/categories"
         );
-        setCategories(response.data);
+        setCategories(response.data.categories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -54,8 +56,9 @@ const AddProducts = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "http://192.168.100.106:4000/api/cat/products"
+          "http://192.168.100.106:4000/api/admin/products"
         );
+
         console.log(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -74,7 +77,7 @@ const AddProducts = () => {
               categoryId: selectedCategoryId,
             }
           );
-          setSubCategories(response.data);
+          setSubCategories(response.data?.subcategories);
         } catch (error) {
           console.error(
             "Error fetching subcategories:",
@@ -89,8 +92,8 @@ const AddProducts = () => {
   const handleImagesChange = (event) => {
     const files = Array.from(event.target.files);
     const validImageFormats = ["image/jpeg", "image/png", "image/jpg"];
-    const validFiles = files.filter(
-      (file) => validImageFormats.includes(file.type)
+    const validFiles = files.filter((file) =>
+      validImageFormats.includes(file.type)
     );
 
     if (validFiles.length + imageFiles.length > 10) {
@@ -107,10 +110,10 @@ const AddProducts = () => {
       newImages.forEach((image) => URL.revokeObjectURL(image));
     };
   };
-  const handleProductAdd = async (values,resetForm) => {
+  const handleProductAdd = async (values, resetForm) => {
     if (!selectedSubCategoryId) {
-        console.error("Subcategory ID is missing.");
-        return; 
+      console.error("Subcategory ID is missing.");
+      return;
     }
     const formData = new FormData();
     formData.append("subCategoryId", selectedSubCategoryId);
@@ -120,43 +123,47 @@ const AddProducts = () => {
     formData.append("description", values.description);
     formData.append("price", values.price);
     formData.append("discount", values.discountPercantage);
-    formData.append("quantity",values.Quantity); 
+    formData.append("quantity", values.Quantity);
 
     imageFiles.forEach((file) => {
-        formData.append("files", file);
-        console.log("Appending file:", file);
+      formData.append("files", file);
+      console.log("Appending file:", file);
     });
 
     console.log("Form Data before submission:", formData);
 
-    setLoading(true); 
+    setLoading(true);
     try {
-        const response = await axios.post(
-            "http://192.168.100.106:4000/api/cat/product",    
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }
-        );
-        console.log("Product added successfully:", response.data);
-        notifySuccess('Successfully Add')
-        setImages([]);
-        setImageFiles([]);
-        resetForm();
-        setCategories([])
-        setSubCategories([])
+      const response = await axios.post(
+        "http:/ /192.168.100.106:4000/api/admin/product",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Product added successfully:", response.data);
+      notifySuccess("Successfully Add");
+      setImages([]);
+      setImageFiles([]);
+      resetForm();
+      setCategories([]);
+      setSubCategories([]);
     } catch (error) {
-      notifyError('Error Adding Product',error.response ? error.response.data : error.message)
-        console.error(
-            "Error adding product:",
-            error.response ? error.response.data : error.message
-        );
+      notifyError(
+        "Error Adding Product",
+        error.response ? error.response.data : error.message
+      );
+      console.error(
+        "Error adding product:",
+        error.response ? error.response.data : error.message
+      );
     } finally {
-        setLoading(false); 
+      setLoading(false);
     }
-};
+  };
 
   const handleDeleteImage = (index) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
@@ -165,188 +172,189 @@ const AddProducts = () => {
 
   return (
     <>
-    <ToastContainer/>
-    <Formik
-      initialValues={{
-        productName: "",
-        heading: "",
-        price: "",
-        discountPercantage: "",
-        description: "",
-        category: null,
-        Subcategory:null,
-        Quantity:''
-      }}
-      validationSchema={validationSchema}
-      onSubmit={(values, { resetForm }) => handleProductAdd(values, resetForm)}
-    >
-      {({ values, handleChange, setFieldValue, touched, errors }) => (
-        <Form  className="space-y-5">
-          <TextField
-            label="Product Name"
-            variant="outlined"
-            fullWidth
-            name="productName"
-            value={values.productName}
-            onChange={handleChange}
-            error={touched.productName && Boolean(errors.productName)}
-            helperText={touched.productName && errors.productName}
-          />
-
-          <Autocomplete
-            options={categories}
-            getOptionLabel={(option) => option.name || ""}
-            onChange={(event, newValue) => {
-              setFieldValue("category", newValue);
-              setSelectedCategoryId(newValue?._id || "");
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select a Category"
-                variant="outlined"
-                error={touched.category && Boolean(errors.category)}
-                helperText={touched.category && errors.category}
-              />
-            )}
-          />
-
-          <Autocomplete
-            options={subCategories}
-            getOptionLabel={(option) => option.name || ""}
-            onChange={(event, newValue) => {
-              setSelectedSubCategoryId(newValue?._id || "");
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select a Subcategory"
-                variant="outlined"
-                error={touched.Subcategory && Boolean(errors.Subcategory)}
-                helperText={touched.Subcategory && errors.Subcategory}
-              />
-            )}
-          />
-
-          <TextField
-            label="Heading"
-            variant="outlined"
-            fullWidth
-            name="heading"
-            value={values.heading}
-            onChange={handleChange}
-            error={touched.heading && Boolean(errors.heading)}
-            helperText={touched.heading && errors.heading}
-          />
-
-          <TextField
-            label="Price"
-            type="number"
-            variant="outlined"
-            fullWidth
-            name="price"
-            value={values.price}
-            onChange={handleChange}
-            error={touched.price && Boolean(errors.price)}
-            helperText={touched.price && errors.price}
+      <ToastContainer />
+      <Formik
+        initialValues={{
+          productName: "",
+          heading: "",
+          price: "",
+          discountPercantage: "",
+          description: "",
+          category: null,
+          Subcategory: null,
+          Quantity: "",
+        }}
+        validationSchema={validationSchema}
+        onSubmit={(values, { resetForm }) =>
+          handleProductAdd(values, resetForm)
+        }
+      >
+        {({ values, handleChange, setFieldValue, touched, errors }) => (
+          <Form className="space-y-5">
+            <TextField
+              label="Product Name"
+              variant="outlined"
+              fullWidth
+              name="productName"
+              value={values.productName}
+              onChange={handleChange}
+              error={touched.productName && Boolean(errors.productName)}
+              helperText={touched.productName && errors.productName}
             />
 
-          <TextField
-            label="Discount Percentage%"
-            type="number"
-            variant="outlined"
-            fullWidth
-            name="discountPercantage"
-            value={values.discountPercantage}
-            onChange={handleChange}
-          />
-           <TextField
-            label="Quantity"
-            type="number"
-            variant="outlined"
-            fullWidth
-            name="Quantity"
-            value={values.Quantity}
-            onChange={handleChange}
-            error={touched.Quantity && Boolean(errors.Quantity)}
-            helperText={touched.Quantity && errors.Quantity}
-          />
-
-          <TextField
-            label="Description"
-            multiline
-            rows={4}
-            variant="outlined"
-            fullWidth
-            name="description"
-            value={values.description}
-            onChange={handleChange}
-            error={touched.description && Boolean(errors.description)}
-            helperText={touched.description && errors.description}
-          />
-
-          <div className="flex flex-wrap">
-            <div className="w-full p-4">
-              <label className="block mb-2 text-center font-semibold">
-                Upload Images
-              </label>
-              <label
-                htmlFor="images-upload"
-                className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-60 cursor-pointer hover:bg-gray-100 transition duration-300"
-              >
-                <Icon
-                  icon="akar-icons:plus"
-                  className="text-3xl text-gray-600"
+            <Autocomplete
+              options={categories}
+              getOptionLabel={(option) => option.name || ""}
+              onChange={(event, newValue) => {
+                setFieldValue("category", newValue);
+                setSelectedCategoryId(newValue?._id || "");
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select a Category"
+                  variant="outlined"
+                  error={touched.category && Boolean(errors.category)}
+                  helperText={touched.category && errors.category}
                 />
-                <span className="mt-2 text-gray-600">Upload Images</span>
-              </label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/jpg"
-                multiple
-                onChange={handleImagesChange}
-                id="images-upload"
-                className="hidden"
-              />
+              )}
+            />
 
-              <div className="flex flex-wrap justify-center gap-2 mt-2">
-                {images.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`Uploaded ${index}`}
-                      className="w-24 h-24 object-cover rounded-lg"
-                    />
-                    <button
-                      onClick={() => handleDeleteImage(index)}
-                      className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1 hover:bg-red-100"
-                    >
-                      &times;
-                    </button>
-                  </div>
-                ))}
+            <Autocomplete
+              options={subCategories}
+              getOptionLabel={(option) => option.name || ""}
+              onChange={(event, newValue) => {
+                setSelectedSubCategoryId(newValue?._id || "");
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select a Subcategory"
+                  variant="outlined"
+                  error={touched.Subcategory && Boolean(errors.Subcategory)}
+                  helperText={touched.Subcategory && errors.Subcategory}
+                />
+              )}
+            />
+
+            <TextField
+              label="Heading"
+              variant="outlined"
+              fullWidth
+              name="heading"
+              value={values.heading}
+              onChange={handleChange}
+              error={touched.heading && Boolean(errors.heading)}
+              helperText={touched.heading && errors.heading}
+            />
+
+            <TextField
+              label="Price"
+              type="number"
+              variant="outlined"
+              fullWidth
+              name="price"
+              value={values.price}
+              onChange={handleChange}
+              error={touched.price && Boolean(errors.price)}
+              helperText={touched.price && errors.price}
+            />
+
+            <TextField
+              label="Discount Percentage%"
+              type="number"
+              variant="outlined"
+              fullWidth
+              name="discountPercantage"
+              value={values.discountPercantage}
+              onChange={handleChange}
+            />
+            <TextField
+              label="Quantity"
+              type="number"
+              variant="outlined"
+              fullWidth
+              name="Quantity"
+              value={values.Quantity}
+              onChange={handleChange}
+              error={touched.Quantity && Boolean(errors.Quantity)}
+              helperText={touched.Quantity && errors.Quantity}
+            />
+
+            <TextField
+              label="Description"
+              multiline
+              rows={4}
+              variant="outlined"
+              fullWidth
+              name="description"
+              value={values.description}
+              onChange={handleChange}
+              error={touched.description && Boolean(errors.description)}
+              helperText={touched.description && errors.description}
+            />
+
+            <div className="flex flex-wrap">
+              <div className="w-full p-4">
+                <label className="block mb-2 text-center font-semibold">
+                  Upload Images
+                </label>
+                <label
+                  htmlFor="images-upload"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-60 cursor-pointer hover:bg-gray-100 transition duration-300"
+                >
+                  <Icon
+                    icon="akar-icons:plus"
+                    className="text-3xl text-gray-600"
+                  />
+                  <span className="mt-2 text-gray-600">Upload Images</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg"
+                  multiple
+                  onChange={handleImagesChange}
+                  id="images-upload"
+                  className="hidden"
+                />
+
+                <div className="flex flex-wrap justify-center gap-2 mt-2">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`Uploaded ${index}`}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={() => handleDeleteImage(index)}
+                        className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1 hover:bg-red-100"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            className="flex items-center justify-center"
-          >
-            {loading ? <CircularProgress size={24} /> : "Add Product"}
-          </Button>
-        </Form>
-      )}
-    </Formik>
-      </>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              className="flex items-center justify-center"
+            >
+              {loading ? <CircularProgress size={24} /> : "Add Product"}
+            </Button>
+          </Form>
+        )}
+      </Formik>
+    </>
   );
 };
 
 export default AddProducts;
-
 
 // // <FormControl variant="outlined" className="w-full bg-white rounded">
 // <InputLabel id="size-label">Sizes</InputLabel>

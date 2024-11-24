@@ -18,11 +18,14 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Box from "@mui/material/Box";
 import Products from "../Components/Products";
-import { CartContext } from "../Context/Context";
-import {Link, useParams} from 'react-router-dom'
+import { Link, useParams } from "react-router-dom";
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import Footer from "../Components/Footer";
+import { CartContext } from "../Context/Context";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "react-hot-toast";
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -62,11 +65,13 @@ export default function ProductDetail() {
   const [ReviewRating, setReviewRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("Black");
   const [product, setProduct] = useState([]);
-  const { addToCart } = useContext(CartContext);
-  const [loading,setLoading]=useState(false)
+  const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState("");
   const API_URL = "http://192.168.100.106:4000/api/auth";
+  const { addToCart } = useContext(CartContext);
+  const notifySuccess = (message) => toast.success(message);
+  const notifyError = (message) => toast.error(message);
   const handleChange = (event, newValue) => {
     setVal(newValue);
   };
@@ -78,15 +83,13 @@ export default function ProductDetail() {
         const response = await axios.get(
           `http://192.168.100.106:4000/api/cat/products/${id}`
         );
-       setProduct(response.data)
-        console.log(response.data)
+        setProduct(response.data);
       } catch (error) {
         console.error("Error fetching product details:", error);
       }
     };
     fetchProductDetails();
   }, [id]);
-
 
   const swiperRef = useRef(null);
 
@@ -157,10 +160,10 @@ export default function ProductDetail() {
       .email("Invalid email address")
       .required("Email is required"),
   });
-  
+
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       if (!token) {
         setIsLoggedIn(false);
         return;
@@ -168,62 +171,67 @@ export default function ProductDetail() {
 
       try {
         const response = await axios.get(`${API_URL}/user-details`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         setUser(response.data);
         setIsLoggedIn(true);
-        console.log(response.data)
       } catch (error) {
         setIsLoggedIn(false);
-        console.log(error)
+        console.log(error);
       }
     };
 
     fetchUserData();
   }, [isLoggedIn]);
 
-  const handleAddToCart = async(product) => {
-    if (!isLoggedIn) {
-       alert('please Login')
-      return;
-    }
-    const cart={
-      productId:product._id,
-      userId:user._id,
-      quantity:quantity
-    }
-    console.log(cart)
-    try {
-      setLoading(true)
-      const response = await axios.post(
-        `http://192.168.100.106:4000/api/cart/add`,cart
-      )
-      addToCart(product);
-      console.log('succes')
-    } catch (error) {
-      setLoading(false)
-      console.log(error)
-    }
-    finally{
-      setLoading(false)
-    }
+  // const handleAddToCart = async(product) => {
+
+  //   if (!isLoggedIn) {
+  //      alert('please Login')
+  //     return;
+  //   }
+  //   const cart={
+  //     productId:product._id,
+  //     userId:user._id,
+  //     quantity:quantity
+  //   }
+  //   try {
+  //     setLoading(true)
+  //     const response = await axios.post(
+  //       `http://192.168.100.106:4000/api/cart/add`,cart
+  //     )
+  //     notifySuccess('Added to Cart')
+  //   } catch (error) {
+  //     setLoading(false)
+  //     console.log(error)
+  //   }
+  //   finally{
+  //     setLoading(false)
+  //   }
+  // };
+ 
+ 
+  const handleAddToCart = (product) => {
+    addToCart(product, user._id, quantity,isLoggedIn);
   };
   return (
     <div>
+      <Toaster position="top-right" reverseOrder={false} />
+      {/* <ToastContainer/> */}
       <Header />
 
       <div className="w-full lg:flex md:flex hidden justify-between">
         <div className="flex items-center gap-1 ml-[5%]">
           <span className="text-[14px] font-Poppins cursor-pointer text-[#6b6b6b] hover:text-[#222] hover:underline">
-           <Link to='/'>Home</Link>
+            <Link to="/">Home</Link>
           </span>
           <Icon
             icon="iconamoon:arrow-right-2-thin"
             className="text-[20px] font-Poppins text-[#222] cursor-pointer"
           />
           <span className="text-[14px] font-Poppins text-[#222] cursor-pointer hover:text-[#6b6b6b] hover:underline">
-            <Link to='/ProductDetail'>Product Details</Link>
+            <Link to="/ProductDetail">Product Details</Link>
           </span>
           <Icon
             icon="iconamoon:arrow-right-2-thin"
@@ -231,89 +239,97 @@ export default function ProductDetail() {
           />
         </div>
         <div className="flex gap-4 mr-[4%]">
-        <div className="flex items-center cursor-pointer">
-        <Icon
-            icon="iconamoon:arrow-left-2-thin"
-            className="text-[20px] font-Poppins text-[#222]"
+          <div className="flex items-center cursor-pointer">
+            <Icon
+              icon="iconamoon:arrow-left-2-thin"
+              className="text-[20px] font-Poppins text-[#222]"
             />
-          <span className="text-[14px] font-Poppins text-[#222] hover:text-[#6b6b6b] hover:underline">
-            prev
-          </span>
-            </div>
-            <div className="flex items-center cursor-pointer">
-          <span className="text-[14px] font-Poppins text-[#222] hover:text-[#6b6b6b] hover:underline">
-            Next
-          </span>
-          <Icon
-            icon="iconamoon:arrow-right-2-thin"
-            className="text-[20px] font-Poppins text-[#222]"
+            <span className="text-[14px] font-Poppins text-[#222] hover:text-[#6b6b6b] hover:underline">
+              prev
+            </span>
+          </div>
+          <div className="flex items-center cursor-pointer">
+            <span className="text-[14px] font-Poppins text-[#222] hover:text-[#6b6b6b] hover:underline">
+              Next
+            </span>
+            <Icon
+              icon="iconamoon:arrow-right-2-thin"
+              className="text-[20px] font-Poppins text-[#222]"
             />
-            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex lg:mt-10 md:-[0%] mt-[10%]  lg:flex-row flex-col">
-
-       { product && (
-    <div className="lg:w-[50%] w-full h-full flex lg:flex-row flex-col-reverse">
-      {/* Thumbnail Images Container */}
-      <div className="lg:w-[30%] w-[100%] lg:mt-0 mt-10 mx-auto lg:mx-0">
-        <div className="flex h-[100%] lg:flex-col flex-row gap-4 justify-center items-center lg:ml-4 px-0 overflow-x-auto lg:overflow-y-auto">
-          {product.imageUrls?.map((imageUrl, idx) => (
-            <span
-              key={idx}
-              onClick={() => handleThumbnailClick(idx)}
-              className={`w-[70px] lg:w-[60%] cursor-pointer h-[50px] lg:h-[100px] ${
-                selectedImageIndex === idx ? "border-[2px] border-[#5EC1A1]" : "opacity-50"
-              }`}
-            >
-              <img
-                src={`http://192.168.100.106:4000${imageUrl}`}
-                alt={`thumbnail-${idx}`}
-                className={`w-full h-full object-cover ${
-                  selectedImageIndex === idx ? "opacity-100" : "opacity-90"
-                }`}
-              />
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Image Container */}
-      <div className="lg:w-[70%] w-[100%] mx-auto lg:mx-0 lg:ml-0 ml-2 h-[100%]">
-        <Swiper
-          spaceBetween={10}
-          slidesPerView={1}
-          onSlideChange={(swiper) => setSelectedImageIndex(swiper.activeIndex)}
-          onSwiper={(swiper) => (swiperRef.current = swiper)}
-        >
-          {product.imageUrls?.map((imageUrl, idx) => (
-            <SwiperSlide key={idx}>
-              <div
-                className="relative overflow-hidden lg:w-full w-[80%] mx-auto h-full"
-                onMouseMove={(e) => handleMouseMove(e, idx)}
-                style={{ cursor: "zoom-in" }}
-              >
-                <img
-                  src={`http://192.168.100.106:4000${imageUrl}`}
-                  alt={`selected-${idx}`}
-                  className={`w-full h-[70vh] object-cover transition-transform duration-300 ${
-                    idx === 0 ? "lg:py-0 md:py-10 py-10" : "py-0"
-                  }`}
-                  style={{ transition: "transform 0.1s" }}
-                  onMouseEnter={(e) => (e.target.style.transform = "scale(1.7)")}
-                  onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
-                />
+        {product && (
+          <div className="lg:w-[50%] w-full h-full flex lg:flex-row flex-col-reverse">
+            {/* Thumbnail Images Container */}
+            <div className="lg:w-[30%] w-[100%] lg:mt-0 mt-10 mx-auto lg:mx-0">
+              <div className="flex h-[100%] lg:flex-col flex-row gap-4 justify-center items-center lg:ml-4 px-0 overflow-x-auto lg:overflow-y-auto">
+                {product.imageUrls?.map((imageUrl, idx) => (
+                  <span
+                    key={idx}
+                    onClick={() => handleThumbnailClick(idx)}
+                    className={`w-[70px] lg:w-[60%] cursor-pointer h-[50px] lg:h-[100px] ${
+                      selectedImageIndex === idx
+                        ? "border-[2px] border-[#5EC1A1]"
+                        : "opacity-50"
+                    }`}
+                  >
+                    <img
+                      src={`http://192.168.100.106:4000${imageUrl}`}
+                      alt={`thumbnail-${idx}`}
+                      className={`w-full h-full object-cover ${
+                        selectedImageIndex === idx
+                          ? "opacity-100"
+                          : "opacity-90"
+                      }`}
+                    />
+                  </span>
+                ))}
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
-  )
-}
+            </div>
 
-  <div className="lg:w-[50%]  w-full h-full lg:-mt-2 md:mt-8 mt-10 px-4">
+            {/* Main Image Container */}
+            <div className="lg:w-[70%] w-[100%] mx-auto lg:mx-0 lg:ml-0 ml-2 h-[100%]">
+              <Swiper
+                spaceBetween={10}
+                slidesPerView={1}
+                onSlideChange={(swiper) =>
+                  setSelectedImageIndex(swiper.activeIndex)
+                }
+                onSwiper={(swiper) => (swiperRef.current = swiper)}
+              >
+                {product.imageUrls?.map((imageUrl, idx) => (
+                  <SwiperSlide key={idx}>
+                    <div
+                      className="relative overflow-hidden lg:w-full w-[80%] mx-auto h-full"
+                      onMouseMove={(e) => handleMouseMove(e, idx)}
+                      style={{ cursor: "zoom-in" }}
+                    >
+                      <img
+                        src={`http://192.168.100.106:4000${imageUrl}`}
+                        alt={`selected-${idx}`}
+                        className={`w-full h-[70vh] object-cover transition-transform duration-300 ${
+                          idx === 0 ? "lg:py-0 md:py-10 py-10" : "py-0"
+                        }`}
+                        style={{ transition: "transform 0.1s" }}
+                        onMouseEnter={(e) =>
+                          (e.target.style.transform = "scale(1.7)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.target.style.transform = "scale(1)")
+                        }
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </div>
+        )}
+
+        <div className="lg:w-[50%]  w-full h-full lg:-mt-2 md:mt-8 mt-10 px-4">
           <h1 className="text-[24px] font-Poppins text-[#222] font-semibold">
             {product.name}
           </h1>
@@ -329,9 +345,15 @@ export default function ProductDetail() {
               (5 Reviews)
             </span>
           </div>
-          <h3 className="text-[27px] font-Poppins leading-[28px]  text-[#5EC1A1]  mt-8">${product.discountedPrice?.toFixed(0)}</h3>
-          <del className="text-[18px] font-Poppins leading-[28px] text-[#222] ">{product.price}</del>
-          <span className="text-[18px] font-Poppins leading-[28px] px-3 text-[#222]">{product.discount}%</span>
+          <h3 className="text-[27px] font-Poppins leading-[28px]  text-[#5EC1A1]  mt-8">
+            ${product.discountedPrice?.toFixed(0)}
+          </h3>
+          <del className="text-[18px] font-Poppins leading-[28px] text-[#222] ">
+            {product.price}
+          </del>
+          <span className="text-[18px] font-Poppins leading-[28px] px-3 text-[#222]">
+            {product.discount}%
+          </span>
           <p className="text-[14px] font-Poppins mt-5 text-[#222] w-[90%]">
             {product.heading}
           </p>
@@ -386,17 +408,21 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            <div onClick={() => handleAddToCart(product)} className="lg:ml-8 cursor-pointer md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center">
-            
-          {loading  ? <CircularProgress size={35} color="white"/> :   <>
-              <Icon
-                icon="iconoir:add-to-cart"
-                className="text-white text-[20px]"
-                />
-              <span className="text-white font-Poppins" >'Add to Cart'</span>
+            <div
+              onClick={() => handleAddToCart(product)}
+              className="lg:ml-8 cursor-pointer md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center"
+            >
+              {loading ? (
+                <CircularProgress size={40} sx={{ color: "white" }} />
+              ) : (
+                <>
+                  <Icon
+                    icon="iconoir:add-to-cart"
+                    className="text-white text-[20px]"
+                  />
+                  <span className="text-white font-Poppins">'Add to Cart'</span>
                 </>
-          }
-        
+              )}
             </div>
           </div>
           <div className="flex gap-4 mt-4">
@@ -472,39 +498,38 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
-        
       </div>
-{/* Reviews Section */}
+      {/* Reviews Section */}
       <div className="flex justify-center mt-12">
         <Box sx={{ width: "95%" }}>
           <Box
             sx={{ borderBottom: 1, borderColor: "divider", overflowX: "auto" }}
           >
             <Tabs
-  value={val}
-  onChange={handleChange}
-  sx={{
-    overflowX: "auto", 
-    "& .MuiTabs-flexContainer": { 
-      overflowX: "auto",
-    },
-    "& .MuiTab-root": {
-      color: "#666", 
-      fontFamily: "Josefi, sans-serif",
-      textTransform: "capitalize",
-      fontSize: "17px",
-      minWidth: "auto", 
-      padding: "8px 16px", 
-    },
-    "& .Mui-selected": {
-      color: "#222", 
-    },
-    "& .MuiTabs-indicator": {
-      backgroundColor: "#222", 
-    },
-  }}
-  aria-label="basic tabs example"
->
+              value={val}
+              onChange={handleChange}
+              sx={{
+                overflowX: "auto",
+                "& .MuiTabs-flexContainer": {
+                  overflowX: "auto",
+                },
+                "& .MuiTab-root": {
+                  color: "#666",
+                  fontFamily: "Josefi, sans-serif",
+                  textTransform: "capitalize",
+                  fontSize: "17px",
+                  minWidth: "auto",
+                  padding: "8px 16px",
+                },
+                "& .Mui-selected": {
+                  color: "#222",
+                },
+                "& .MuiTabs-indicator": {
+                  backgroundColor: "#222",
+                },
+              }}
+              aria-label="basic tabs example"
+            >
               <Tab label="Description" {...a11yProps(0)} />
               <Tab label="Additional Information" {...a11yProps(1)} />
               <Tab label="Reviews(1)" {...a11yProps(2)} />
@@ -616,7 +641,6 @@ export default function ProductDetail() {
                 </span>
               </div>
               <hr className="mt-5" />
-
             </div>
           </CustomTabPanel>
           {/* Reviws */}
@@ -678,7 +702,7 @@ export default function ProductDetail() {
                 }}
                 validationSchema={validationSchema}
                 onSubmit={(values) => {
-                  console.log("Form values:", values);
+                  console.log("Submit Form:", values);
                 }}
               >
                 {({ errors, touched }) => (
@@ -753,14 +777,14 @@ export default function ProductDetail() {
 
                     {/* Submit Button */}
                     <div className="flex  mt-4 justify-center">
-                    <button type="submit" className="btn blk font-Poppins ">
-                      <span className="spn bl"></span>Submit Your Reviews
-                      <Icon
-                        icon="tabler:arrow-up-right"
-                        className="text-[28px] transition duration-200"
+                      <button type="submit" className="btn blk font-Poppins ">
+                        <span className="spn bl"></span>Submit Your Reviews
+                        <Icon
+                          icon="tabler:arrow-up-right"
+                          className="text-[28px] transition duration-200"
                         />
-                    </button>
-                        </div>
+                      </button>
+                    </div>
                   </Form>
                 )}
               </Formik>
@@ -769,15 +793,15 @@ export default function ProductDetail() {
           </CustomTabPanel>
         </Box>
       </div>
-      
-{/* Products */}
-     <div>
-    <Products/>
-     </div>
 
-     <div className="mt-24">
-     <Footer/>
-     </div>
+      {/* Products */}
+      <div>
+        <Products />
+      </div>
+
+      <div className="mt-24">
+        <Footer />
+      </div>
     </div>
   );
 }

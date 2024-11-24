@@ -12,7 +12,6 @@ import { Icon } from "@iconify/react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import { CartContext } from "../Context/Context";
 
 export default function Products() {
 

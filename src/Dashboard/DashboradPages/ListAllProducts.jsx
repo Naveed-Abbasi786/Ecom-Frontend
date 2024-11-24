@@ -34,13 +34,16 @@ export default function ProductsTable() {
   const [status, setStatus] = useState(false);
 
   const itemsPerPage = 5;
-
+  const token = localStorage.getItem("authToken");
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://192.168.100.106:4000/api/cat/products"
+          "http://192.168.100.106:4000/api/admin/products",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         const activeProducts = response.data.products.filter(
           (product) => !product.isDeleted
@@ -60,6 +63,7 @@ export default function ProductsTable() {
   const hanldeEdit = (_id) => {
     alert(_id);
   };
+
   const handleDelete = async (_id) => {
     // First, ask for confirmation
     const isConfirmed = window.confirm(
@@ -68,14 +72,16 @@ export default function ProductsTable() {
 
     if (!isConfirmed) {
       alert("Deletion cancelled.");
-      return; // If cancelled, exit the function
+      return;
     }
 
-    // If confirmed, proceed with deletion logic
     try {
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/cat/product/soft-delete",
-        { productId: _id }
+        "http://192.168.100.106:4000/api/admin/product/id",
+        { productId: _id },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       console.log("Successfully deleted");
 
@@ -96,18 +102,22 @@ export default function ProductsTable() {
 
   const handleStatus = async (_id) => {
     setStatusMap((prevStatusMap) => {
-      const newStatus = !prevStatusMap[_id]; // Toggle the status for specific product ID
-      return { ...prevStatusMap, [_id]: newStatus }; // Update only the status of the specific product ID
+      const newStatus = !prevStatusMap[_id];
+      return { ...prevStatusMap, [_id]: newStatus };
     });
 
     try {
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/cat/product/toggle-visibility",
+        "http://192.168.100.106:4000/api/admin/product/toggle-status",
         {
           productId: _id,
-          isPublic: statusMap[_id], // Send the updated status for the specific product
+          isPublic: statusMap[_id],
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       console.log("Successfully toggled visibility for product ID:", _id);
     } catch (error) {
       console.log("Error:", error);
@@ -154,7 +164,7 @@ export default function ProductsTable() {
 
   return (
     <div className="w-full flex bg-transparent flex-col items-center">
-      <Card className="w-full bg-transparent max-w-[100%]">
+      <Card className="w-full shadow-none bg-transparent max-w-[100%]">
         <CardHeader
           floated={false}
           shadow={false}
