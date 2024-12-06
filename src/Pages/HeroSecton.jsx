@@ -8,7 +8,7 @@ import BannerImg1 from "../assets/img/banner-image-1.png";
 import BannerImg2 from "../assets/img/banner-image-2.png";
 import BannerImg3 from "../assets/img/banner-image-3.png";
 import { Icon } from "@iconify/react";
-import "../Components/Button.css";
+import "../App.css";
 export default function HeroSection() {
   const slides = [
     {

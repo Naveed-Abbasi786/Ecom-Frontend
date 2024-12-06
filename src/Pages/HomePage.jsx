@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Header from "../Components/Header";
 import HeroSection from "./HeroSecton";
 import SlideLogos from "../Components/SlideLogos";
@@ -7,14 +7,6 @@ import Category2 from "../assets/img/category-2.png";
 import Category3 from "../assets/img/category-3.png";
 import Category4 from "../assets/img/category-4.png";
 import separator from "../assets/img/separator.png";
-import Product1 from "../assets/img/Product1.jpg";
-import Product2 from "../assets/img/Product2.jpg";
-import Product3 from "../assets/img/Product3.jpg";
-import Product4 from "../assets/img/Product4.jpg";
-import Product5 from "../assets/img/Product4.jpg";
-import Product6 from "../assets/img/Product6.jpg";
-import Product7 from "../assets/img/Product7.jpg";
-import Product8 from "../assets/img/Product8.jpg";
 import News1 from "../assets/img/news-1.jpg";
 import News2 from "../assets/img/news-2.jpg";
 import News3 from "../assets/img/news-3.jpg";
@@ -25,22 +17,24 @@ import Footer from "../Components/Footer";
 import { useNavigate } from "react-router-dom";
 import Products from "../Components/Products";
 import CollectionProducts from "../Components/CollectionProducts";
-import MainNavbar from "../Components/MainNavbar";
-import MiniNavbar from "../Components/MiniNavbar";
-import Navbar from "../Components/Navbar";
+import MainNavbar from "../Components/Header/MainNavbar";
+import MiniNavbar from "../Components/Header/MiniNavbar";
+import Navbar from "../Components/Header/Navbar";
+import { CartContext } from "../Context/Context";
+import { CircularProgress } from "@mui/material";
 
 export default function HomePage({ productData }) {
-
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
-
+  const { categories, categoryLoading } = useContext(CartContext);
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const category = [
     { CategoryPic: Category1, Title: "Women Collections" },
     { CategoryPic: Category2, Title: "Kids Collections" },
     { CategoryPic: Category3, Title: "Summer Collections" },
     { CategoryPic: Category4, Title: "Gents Collections" },
   ];
-  
+
   const NewsData = [
     {
       NewsImg: News1,
@@ -98,9 +92,9 @@ export default function HomePage({ productData }) {
   };
   return (
     <div>
-      <MiniNavbar/>
-      <MainNavbar/>
-      <Navbar/>
+      <MiniNavbar />
+      <MainNavbar />
+      <Navbar />
       {/* <Header /> */}
       <HeroSection />
       <SlideLogos />
@@ -116,31 +110,35 @@ export default function HomePage({ productData }) {
         <div className="flex justify-center mt-5">
           <img src={separator} alt="" />
         </div>
-        <div className="flex flex-wrap  justify-center gap-6 mt-8">
-          {category.map((val, idx) => (
-            <div
-              key={idx}
-              className="lg:w-[20%] md:w-[30%]  flex flex-col justify-center"
-            >
-              <div className="w-full h-full cursor-pointer rounded-full relative group overflow-hidden">
-                <img
-                  src={val.CategoryPic}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute inset-0 bg-[#5EC1A1] opacity-0 rounded-full duration-300 ease-in group-hover:opacity-50 scale-[0] group-hover:scale-100"></span>
+        <div className="flex flex-wrap justify-center gap-6 mt-8">
+          {categoryLoading ? (
+            <CircularProgress />
+          ) : (
+            categories.map((val, idx) => (
+              <div
+                key={idx}
+                className="lg:w-[20%] md:w-[30%] flex flex-col justify-center"
+              >
+                <div className="w-full h-full cursor-pointer rounded-full relative group overflow-hidden">
+                  <img
+                    src={`http://192.168.100.155:4000${val.image}`}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute inset-0 bg-[#5EC1A1] opacity-0 rounded-full duration-300 ease-in group-hover:opacity-50 scale-[0] group-hover:scale-100"></span>
+                </div>
+                <span className="text-center text-[#222222] hover:text-[#5EC1A1] cursor-pointer mt-2 text-[18px] font-Josefi">
+                  {val.name}
+                </span>
               </div>
-              <span className="text-center text-[#222222] hover:text-[#5EC1A1] cursor-pointer mt-2 text-[18px] font-Josefi">
-                {val.Title}
-              </span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
       {/* Top Collection */}
 
-      <CollectionProducts/>
+      <CollectionProducts />
 
       {/*Season Sale  */}
 
@@ -246,9 +244,8 @@ export default function HomePage({ productData }) {
           ))}
         </div>
       </div>
-{/* Products */}
-<Products className='mt-5'/>
-
+      {/* Products */}
+      <Products className="mt-5" />
 
       {/* CustomerSupport */}
 

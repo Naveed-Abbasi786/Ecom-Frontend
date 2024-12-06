@@ -15,7 +15,7 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
-  const API_URL = "http://192.168.100.106:4000/api/auth";
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
   const location = useLocation();
 
@@ -30,7 +30,7 @@ export default function ResetPassword() {
     const newPassword = values.password;
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/reset-password`, { newPassword, token });
+      const response = await axios.post(`${API_URL}api/auth/reset-password`, { newPassword, token });
       notifySuccess('Password saved successfully');
       console.log('Response:', response);
     } catch (error) {

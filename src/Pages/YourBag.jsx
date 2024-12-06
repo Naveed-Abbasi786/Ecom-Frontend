@@ -17,7 +17,8 @@ export default function ShopingCart() {
   const [user, setUser] = useState("");
   const [cartTotal, setCartTotal] = useState(null);
   const [loading, setLoading] = useState(false);
-  const API_URL = "http://192.168.100.106:4000/api/auth";
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
   const navigate = useNavigate();
 
   const progressRef = React.useRef(() => {});
@@ -48,7 +49,7 @@ export default function ShopingCart() {
     }
 
     try {
-      const response = await axios.get(`${API_URL}/user-details`, {
+      const response = await axios.get(`${API_URL}api/auth/user-details`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -57,10 +58,9 @@ export default function ShopingCart() {
 
       if (response.data._id) {
         setLoading(true);
-        const cartResponse = await axios.post(
-          `http://192.168.100.106:4000/api/cart/getcart`,
-          { userId: response.data._id }
-        );
+        const cartResponse = await axios.post(`${API_URL}api/cart/getcart`, {
+          userId: response.data._id,
+        });
         setCartItems(cartResponse.data.cart.items);
         setCartTotal(cartResponse.data.cartTotal);
       }
@@ -72,10 +72,7 @@ export default function ShopingCart() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
+ 
   const handleDelete = async (id) => {
     const cartItemdelete = {
       productId: id,
@@ -83,7 +80,7 @@ export default function ShopingCart() {
     };
     try {
       const response = await axios.post(
-        `http://192.168.100.106:4000/api/cart/remove`,
+        `${API_URL}api/cart/remove`,
         cartItemdelete
       );
 
@@ -108,18 +105,18 @@ export default function ShopingCart() {
       };
 
       const response = await axios.post(
-        `http://192.168.100.106:4000/api/cart/updatecart`,
+        `${API_URL}api/cart/updatecart`,
         cartItem
       );
       console.log("Cart Item Updated Successfully:", response.data);
-      fetchUserData();
-      if (response.data.success) {
-        setCartItems((prevCart) =>
-          prevCart.map((item) =>
-            item._id === productId ? { ...item, quantity: newQuantity } : item
-          )
-        );
-      }
+      setCartItems(response.data.cart.items);
+      // if (response.data.success) {
+      //   setCartItems((prevCart) =>
+      //     prevCart.map((item) =>
+      //       item._id === productId ? { ...item, quantity: newQuantity } : item
+      //     )
+      //   );
+      // }
     } catch (error) {
       console.error("Error updating cart item:", error);
     } finally {
@@ -154,6 +151,10 @@ export default function ShopingCart() {
       alert("Quantity cannot be less than 1.");
     }
   };
+  useEffect(() => {
+      fetchUserData();    
+  }, []);
+  
 
   return (
     <>
@@ -191,7 +192,7 @@ export default function ShopingCart() {
         </div>
 
         <div className="bg-[#5EC1A1] ml-[5%] mt-6 w-[85%] py-3 flex items-center gap-4">
-          <Icon icon="proicons:info" className="ml-3 text-white text-white" />
+          <Icon icon="proicons:info" className="ml-3  text-white" />
           <p className="text-white text-[14px] font-Poppins font-normal leading-[24px]">
             Someone has placed an order on one of the items you have in the
             cart. We'll keep it for you for
@@ -203,7 +204,7 @@ export default function ShopingCart() {
           <div className="lg:w-[70%] w-[100%] h-[100%]">
             <div className="w-[90%]  overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 text-[#999999] border-b ">
+                <thead className="text-xs  text-[#999999] border-b ">
                   <tr>
                     <th
                       scope="col"
@@ -258,7 +259,7 @@ export default function ShopingCart() {
                       <tr key={product.id} className="bg-white border-b">
                         <td className="px-6 mr-20 py-4 flex items-center">
                           <img
-                            src={`http://192.168.100.106:4000${product.product.imageUrls[0]}`}
+                            src={`http://192.168.100.155:4000${product.product.imageUrls[0]}`}
                             alt={product.name}
                             className="w-12 h-12 leading-[20px] mr-4 rounded"
                           />
@@ -337,7 +338,7 @@ export default function ShopingCart() {
                 <input
                   type="text"
                   placeholder="Your Code here"
-                  className="outline-none border py-1 px-2 border-2 focus:border-[#5EC1A1]  w-full sm:w-auto"
+                  className="outline-none  py-1 px-2 border-2 focus:border-[#5EC1A1]  w-full sm:w-auto"
                 />
                 <button className="bg-[#5EC1A1] text-white mt-2 sm:mt-0 sm:ml-2 px-4 py-1">
                   Save
@@ -347,12 +348,12 @@ export default function ShopingCart() {
           </div>
 
           <div className="lg:w-[30%] w-[100%] h-full bg-[#F9F9F9] border-2 border-dotted  lg:mt-0 mt-6">
-            <h2 className="w-[80%] mx-auto  font-Poppins text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2">
+            <h2 className="w-[80%] mx-auto   text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2">
               Cart Total
             </h2>
             <div className="w-[80%] mx-auto ">
               <h2
-                className=" text-[#333333] font-Poppins leading-[17px]  py-5 font-bold border-b-2 flex justify-between 
+                className=" text-[#333333]  leading-[17px]  py-5 font-bold border-b-2 flex justify-between 
              leading font-Poppins"
               >
                 <span className="text-gray-600">Subtotal:</span>

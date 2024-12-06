@@ -2,112 +2,98 @@ import * as React from "react";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
 import { PageContainer } from "@toolpad/core/PageContainer";
-import { Menu, MenuItem, Button } from "@mui/material";
-import AddCategory from "./DashboradPages/AddCategory";
-import AddProducts from "./DashboradPages/AddProducts";
-import { extendTheme } from "@mui/material/styles";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import ListAllProducts from "../Dashboard/DashboradPages/ListAllProducts";
-import EditIcon from "@mui/icons-material/Edit";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import ListIcon from "@mui/icons-material/List";
-import ListAltIcon from "@mui/icons-material/ListAlt";
-import Dashbords from "./dashboarad";
-import AddIcon from "@mui/icons-material/Add";
-import ListAllOrders from "./DashboradPages/ListAllOrders";
-import "../App.css";
-import PanelSettingsIcon from "@mui/icons-material/Settings";
-import EditProducts from "./DashboradPages/EditProducts";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { extendTheme } from "@mui/material/styles";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import EditIcon from "@mui/icons-material/Edit";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 
+// Pages
+import Dashbords from "./dashboarad";
+import AddCategory from "./DashboradPages/AddCategory";
+import AddProducts from "./DashboradPages/AddProducts";
+import ListAllProducts from "./DashboradPages/ListAllProducts";
+import ListAllOrders from "./DashboradPages/ListAllOrders";
+import AddSubCategory from "./DashboradPages/AddSubCategory";
+import AddBlog from "./DashboradPages/AddBlog";
+import { CartContext } from "../Context/Context";
+
+// Navigation Configuration
 const NAVIGATION = [
+  { segment: "dashboard", title: "Dashboard", icon: <DashboardIcon /> },
+  { kind: "header", title: "Products" },
   {
-    kind: "header",
-    title: "Main Items",
+    segment: "product",
+    title: "Products",
+    children: [
+      { segment: "addproduct", title: "Add Product", icon: <EditIcon /> },
+      {
+        segment: "listproduct",
+        title: "List Products",
+        icon: <ShoppingCartIcon />,
+      },
+    ],
   },
+  { kind: "header", title: "Category" },
   {
-    segment: "dashboard",
-    title: "Dashboard",
-    icon: <DashboardIcon />,
+    segment: "addcategory",
+    title: "Categories",
+    children: [
+      { segment: "addcategory", title: "Add Category", icon: <EditIcon /> },
+      {
+        segment: "addsubcategory",
+        title: "Add Subcategory",
+        icon: <AppRegistrationIcon />,
+      },
+      { kind: "divider" },
+    ],
   },
+  { kind: "header", title: "Blog" },
   {
-    segment: "AddCategory",
-    icon: <ShoppingCartIcon />,
+    segment: "add-blog",
+    title: "Add Blog",
+    children: [
+      { segment: "add-blog", title: "Add Blog", icon: <EditIcon /> },
+      { kind: "divider" },
+    ],
   },
-  {
-    segment: "AddProducts",
-    icon: <AddIcon />,
-  },
-  {
-    segment: "EditProducts",
-    icon: <EditIcon />,
-  },
-  {
-    segment: "ListAllProducts",
-    icon: <ListIcon />,
-  },
-  {
-    segment: "ListAllOrder",
-    icon: <ListAltIcon />,
-  },
+
+  { segment: "orderList", title: "Order List", icon: <AppRegistrationIcon /> },
 ];
 
+// Theme Configuration
 const demoTheme = extendTheme({
   colorSchemes: { light: true, dark: true },
   colorSchemeSelector: "class",
 });
 
+// Custom Hook for Navigation
 function useDemoRouter(initialPath) {
   const [pathname, setPathname] = React.useState(initialPath);
 
-  const router = React.useMemo(() => {
-    return {
+  const router = React.useMemo(
+    () => ({
       pathname,
       navigate: (path) => setPathname(String(path)),
-    };
-  }, [pathname]);
+    }),
+    [pathname]
+  );
 
   return router;
 }
 
-export default function DashboardLayoutBasic(props) {
-  const { window } = props;
-  const [user, setUser] = React.useState(null);
+export default function DashboardLayoutBasic() {
   const [loading, setLoading] = React.useState(true);
   const [session, setSession] = React.useState(null);
-  const [loggedIn, setLoggedIn] = React.useState(false);
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+  // const { user } = React.useContext(CartContext);
+  const {  user } = React.useContext(CartContext);
+  console.log(user)
+
   const navigate = useNavigate("");
-
-  const API_URL = "http://192.168.100.106:4000/api/auth";
-
-  const fetchUserData = async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await axios.get(`${API_URL}/user-details`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLoggedIn(true);
-      setUser(response.data);
-    } catch (error) {
-      setLoggedIn(false);
-      console.error("Error fetching user details:", error);
-    } finally {
-      setLoggedIn(true);
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  
-  const username=user?.username?.[0]?.toUpperCase()
+  const username = user?.username?.[0]?.toUpperCase();
   const authentication = React.useMemo(
     () => ({
       signIn: () => {
@@ -116,14 +102,14 @@ export default function DashboardLayoutBasic(props) {
             user: {
               name: username,
               email: user.email,
-              image: `http://192.168.100.106:4000${user.profileImage}`,
+              image: `http://192.168.100.155:4000${user.profileImage}`,
             },
           });
         }
       },
       signOut: () => {
-        navigate("/");
         localStorage.removeItem("authToken");
+        navigate("/");
         setSession(null);
         setUser(null);
       },
@@ -135,27 +121,26 @@ export default function DashboardLayoutBasic(props) {
     if (user) {
       authentication.signIn();
     }
-    // if (!loggedIn) {
-    //   navigate("/");
-    // }
   }, [user, authentication]);
 
   const router = useDemoRouter("/dashboard");
-  const demoWindow = window ? window() : undefined;
 
+  // Page Rendering Logic
   function renderPage() {
     switch (router.pathname) {
       case "/dashboard":
         return <Dashbords />;
-      case "/AddCategory":
+      case "/addcategory/addcategory":
         return <AddCategory />;
-      case "/AddProducts":
+      case "/addcategory/addsubcategory":
+        return <AddSubCategory />;
+      case "/product/addproduct":
         return <AddProducts />;
-      case "/ListAllProducts":
+      case "/product/listproduct":
         return <ListAllProducts />;
-      case "/EditProducts":
-        return <EditProducts />;
-      case "/ListAllOrder":
+      case "/add-blog/add-blog":
+        return <AddBlog />;
+      case "/orderList":
         return <ListAllOrders />;
       default:
         return <div>Page Not Found</div>;
@@ -165,11 +150,10 @@ export default function DashboardLayoutBasic(props) {
   return (
     <AppProvider
       navigation={NAVIGATION}
-      router={router}
-      theme={demoTheme}
-      window={demoWindow}
       session={session}
       authentication={authentication}
+      router={router}
+      theme={demoTheme}
     >
       <DashboardLayout>
         <PageContainer>{renderPage()}</PageContainer>
