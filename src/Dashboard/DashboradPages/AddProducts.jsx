@@ -18,11 +18,15 @@ const validationSchema = Yup.object({
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive"),
-  discountPercantage: Yup.number().positive("Discount price must be positive"),
+  discountPercantage: Yup.number()
+    .required("Required discountPercantage")
+    .positive("Discount price must be positive")
+    .min(0, "Minimum Discount is 1")
+    .max(99, "Maximum Discount is 99"),
   description: Yup.string().required("Requird the Discription"),
   Quantity: Yup.number()
-    .required("Requird Quanity")
-    .positive("must be positive"),
+    .required("Required Quantity")
+    .positive("Quantity must be positive")
   // category:Yup.required('Requird Category'),
   // Subcategory:Yup.required('Requird Category'),
 });
@@ -38,11 +42,12 @@ const AddProducts = () => {
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
   const token = localStorage.getItem("authToken");
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "http://192.168.100.106:4000/api/cat/categories"
+          `${API_URL}api/cat/categories`
         );
         setCategories(response.data.categories);
       } catch (error) {
@@ -52,27 +57,14 @@ const AddProducts = () => {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          "http://192.168.100.106:4000/api/admin/products"
-        );
-
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-    fetchCategories();
-  }, []);
+ 
 
   useEffect(() => {
     if (selectedCategoryId) {
       const fetchSubCategories = async () => {
         try {
           const response = await axios.post(
-            "http://192.168.100.106:4000/api/cat/category/subcategories",
+            `${API_URL}api/cat/category/subcategories`,
             {
               categoryId: selectedCategoryId,
             }
@@ -135,7 +127,7 @@ const AddProducts = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http:/ /192.168.100.106:4000/api/admin/product",
+        `${API_URL}api/admin/product`,
         formData,
         {
           headers: {
@@ -149,8 +141,6 @@ const AddProducts = () => {
       setImages([]);
       setImageFiles([]);
       resetForm();
-      setCategories([]);
-      setSubCategories([]);
     } catch (error) {
       notifyError(
         "Error Adding Product",
@@ -267,7 +257,9 @@ const AddProducts = () => {
               fullWidth
               name="discountPercantage"
               value={values.discountPercantage}
-              onChange={handleChange}
+              onChange={handleChange} 
+              error={touched.discountPercantage && Boolean(errors.discountPercantage)}
+              helperText={touched.discountPercantage && errors.discountPercantage}
             />
             <TextField
               label="Quantity"

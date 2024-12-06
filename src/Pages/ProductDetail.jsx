@@ -68,24 +68,32 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
-  const API_URL = "http://192.168.100.106:4000/api/auth";
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
   const { addToCart } = useContext(CartContext);
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
   const handleChange = (event, newValue) => {
     setVal(newValue);
   };
+  useEffect(() => {
+    window.scrollTo(0, 0); 
+  }, []);
+
 
   const { id } = useParams();
   useEffect(() => {
     const fetchProductDetails = async () => {
+      setLoading(true)
       try {
-        const response = await axios.get(
-          `http://192.168.100.106:4000/api/cat/products/${id}`
-        );
+        const response = await axios.get(`${API_URL}api/cat/products/${id}`);
         setProduct(response.data);
       } catch (error) {
+        setLoading(false)
         console.error("Error fetching product details:", error);
+      }
+      finally{
+        setLoading(false)
       }
     };
     fetchProductDetails();
@@ -170,7 +178,7 @@ export default function ProductDetail() {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/user-details`, {
+        const response = await axios.get(`${API_URL}api/auth/user-details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -210,10 +218,9 @@ export default function ProductDetail() {
   //     setLoading(false)
   //   }
   // };
- 
- 
+
   const handleAddToCart = (product) => {
-    addToCart(product, user._id, quantity,isLoggedIn);
+    addToCart(product, user._id, quantity, isLoggedIn);
   };
   return (
     <div>
@@ -260,245 +267,257 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <div className="flex lg:mt-10 md:-[0%] mt-[10%]  lg:flex-row flex-col">
-        {product && (
-          <div className="lg:w-[50%] w-full h-full flex lg:flex-row flex-col-reverse">
-            {/* Thumbnail Images Container */}
-            <div className="lg:w-[30%] w-[100%] lg:mt-0 mt-10 mx-auto lg:mx-0">
-              <div className="flex h-[100%] lg:flex-col flex-row gap-4 justify-center items-center lg:ml-4 px-0 overflow-x-auto lg:overflow-y-auto">
-                {product.imageUrls?.map((imageUrl, idx) => (
-                  <span
-                    key={idx}
-                    onClick={() => handleThumbnailClick(idx)}
-                    className={`w-[70px] lg:w-[60%] cursor-pointer h-[50px] lg:h-[100px] ${
-                      selectedImageIndex === idx
-                        ? "border-[2px] border-[#5EC1A1]"
-                        : "opacity-50"
-                    }`}
-                  >
-                    <img
-                      src={`http://192.168.100.106:4000${imageUrl}`}
-                      alt={`thumbnail-${idx}`}
-                      className={`w-full h-full object-cover ${
-                        selectedImageIndex === idx
-                          ? "opacity-100"
-                          : "opacity-90"
-                      }`}
-                    />
-                  </span>
-                ))}
-              </div>
-            </div>
 
-            {/* Main Image Container */}
-            <div className="lg:w-[70%] w-[100%] mx-auto lg:mx-0 lg:ml-0 ml-2 h-[100%]">
-              <Swiper
-                spaceBetween={10}
-                slidesPerView={1}
-                onSlideChange={(swiper) =>
-                  setSelectedImageIndex(swiper.activeIndex)
-                }
-                onSwiper={(swiper) => (swiperRef.current = swiper)}
-              >
-                {product.imageUrls?.map((imageUrl, idx) => (
-                  <SwiperSlide key={idx}>
-                    <div
-                      className="relative overflow-hidden lg:w-full w-[80%] mx-auto h-full"
-                      onMouseMove={(e) => handleMouseMove(e, idx)}
-                      style={{ cursor: "zoom-in" }}
-                    >
-                      <img
-                        src={`http://192.168.100.106:4000${imageUrl}`}
-                        alt={`selected-${idx}`}
-                        className={`w-full h-[70vh] object-cover transition-transform duration-300 ${
-                          idx === 0 ? "lg:py-0 md:py-10 py-10" : "py-0"
-                        }`}
-                        style={{ transition: "transform 0.1s" }}
-                        onMouseEnter={(e) =>
-                          (e.target.style.transform = "scale(1.7)")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.transform = "scale(1)")
-                        }
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </div>
-        )}
-
-        <div className="lg:w-[50%]  w-full h-full lg:-mt-2 md:mt-8 mt-10 px-4">
-          <h1 className="text-[24px] font-Poppins text-[#222] font-semibold">
-            {product.name}
-          </h1>
-          <div className="flex mt-3 gap-2 items-center">
-            <Rating
-              name="simple-controlled"
-              value={value}
-              onChange={(event, newValue) => {
-                setValue(newValue);
-              }}
-            />
-            <span className="text-[13px] font-Poppins text-[#6b6b6b]">
-              (5 Reviews)
-            </span>
-          </div>
-          <h3 className="text-[27px] font-Poppins leading-[28px]  text-[#5EC1A1]  mt-8">
-            ${product.discountedPrice?.toFixed(0)}
-          </h3>
-          <del className="text-[18px] font-Poppins leading-[28px] text-[#222] ">
-            {product.price}
-          </del>
-          <span className="text-[18px] font-Poppins leading-[28px] px-3 text-[#222]">
-            {product.discount}%
-          </span>
-          <p className="text-[14px] font-Poppins mt-5 text-[#222] w-[90%]">
-            {product.heading}
-          </p>
-          <div className="flex mt-6 gap-2">
-            <span className="text-gray-400 font-Poppins py-1">Color :</span>
-            <div className="relative lg:w-[17%] w-auto">
-              <Listbox value={selectedStatus} onChange={setSelectedStatus}>
-                <Listbox.Button className="w-full appearance-none outline-none border-gray-100 border-[2px] py-1 font-Poppins text-[15px] px-2 bg-transparent text-[#666666] flex justify-between items-center">
-                  {
-                    statuses.find((status) => status.value === selectedStatus)
-                      .label
-                  }
-                  <ChevronDownIcon className="h-5 w-5 fill-[#666666]" />
-                </Listbox.Button>
-                <Listbox.Options className="absolute mt-2 w-full bg-white border border-[#666666] rounded shadow-lg z-10">
-                  {statuses.map((status) => (
-                    <Listbox.Option
-                      key={status.value}
-                      value={status.value}
-                      className={({ active }) =>
-                        `cursor-pointer select-none px-4 py-2 ${
-                          active ? "bg-gray-200 text-[#222]" : "text-[#666666]"
-                        }`
-                      }
-                    >
-                      {status.label}
-                    </Listbox.Option>
-                  ))}
-                </Listbox.Options>
-              </Listbox>
-            </div>
-          </div>
-
-          <div className="flex lg:flex-row  md:flex-row flex-col mt-8">
-            <div className="lg:w-[150px] md:w-[150px] w-[200px]  h-[50px] flex items-center justify-between border rounded-md overflow-hidden">
-              <button
-                onClick={decrement}
-                className="w-10 h-full flex items-center justify-center  hover:bg-gray-300"
-              >
-                <Icon icon="line-md:minus" className="text-xl text-[#666666]" />
-              </button>
-
-              <span className="flex-1 text-center text-[#666666]">
-                {quantity}
-              </span>
-
-              <button
-                onClick={increment}
-                className="w-10 h-full flex items-center justify-center hover:bg-gray-300"
-              >
-                <Icon icon="line-md:plus" className="text-xl text-[#666666]" />
-              </button>
-            </div>
-
-            <div
-              onClick={() => handleAddToCart(product)}
-              className="lg:ml-8 cursor-pointer md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center"
+      {loading ? (
+      <div className="w-full h-[50vh] mx-auto">
+        <CircularProgress size={40}/>
+        </div>
+) : (
+  <div className="flex lg:mt-10 md:-[0%] mt-[10%]  lg:flex-row flex-col">
+  {product && (
+    <div className="lg:w-[50%] w-full h-full flex lg:flex-row flex-col-reverse">
+      {/* Thumbnail Images Container */}
+      <div className="lg:w-[30%] w-[100%] lg:mt-0 mt-10 mx-auto lg:mx-0">
+        <div className="flex h-[100%] lg:h-[70vh] lg:flex-col flex-row gap-4 justify-center items-center lg:ml-4 px-0 overflow-x-auto lg:overflow-y-auto">
+          {product.imageUrls?.map((imageUrl, idx) => (
+            <span
+              key={idx}
+              onClick={() => handleThumbnailClick(idx)}
+              className={`w-[70px] lg:w-[60%] cursor-pointer h-[50px] lg:h-[100px] ${
+                selectedImageIndex === idx
+                  ? "border-[2px] border-[#5EC1A1]"
+                  : "opacity-50"
+              }`}
             >
-              {loading ? (
-                <CircularProgress size={40} sx={{ color: "white" }} />
-              ) : (
-                <>
-                  <Icon
-                    icon="iconoir:add-to-cart"
-                    className="text-white text-[20px]"
-                  />
-                  <span className="text-white font-Poppins">'Add to Cart'</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-4 mt-4">
-            <div className="flex items-center gap-2 group cursor-pointer hover:text-[#5EC1A1]">
-              <span>
-                <Icon
-                  icon="line-md:heart"
-                  className="text-gray-400  group-hover:text-[#5EC1A1] -mt-1 text-[22px]"
-                />
-              </span>
-              <span className="text-gray-400 font-Poppins text-[14px] group-hover:text-[#5EC1A1] hover:underline">
-                Add to Wishlist
-              </span>
-            </div>
-
-            <div className="flex items-center cursor-pointer gap-2 group hover:text-[#5EC1A1]">
-              <span>
-                {" "}
-                <Icon
-                  icon="teenyicons:git-compare-outline"
-                  className="text-gray-400 group-hover:text-[#5EC1A1]  -mt-1 text-[17px]"
-                />
-              </span>
-              <span className="text-gray-400 font-Poppins text-[14px] group-hover:text-[#5EC1A1] hover:underline py-1">
-                Add to Wishlist
-              </span>
-            </div>
-          </div>
-
-          <hr className="mt-4 bg-gray-900" />
-
-          <div className="flex mt-4 lg:flex-row md:flex-row flex-col gap-3 justify-between">
-            <div className="flex gap-4">
-              {" "}
-              <span className="text-gray-400 font-Poppins text-[15px]">
-                Categories :{" "}
-              </span>{" "}
-              <span className="text-gray-400 font-Poppins text-[15px]">
-                Electronics
-              </span>
-            </div>
-
-            <div className="flex gap-2 mr-4  items-center">
-              <h6 className="text-gray-400 font-Poppins text-[15px]">
-                Share On :{" "}
-              </h6>
-              <div className="flex items-center gap-4">
-                <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
-                  <Icon
-                    icon="line-md:facebook"
-                    className="text-[23px] text-gray-400"
-                  />
-                </span>
-                <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
-                  <Icon
-                    icon="line-md:instagram"
-                    className="text-[23px] text-gray-400"
-                  />
-                </span>
-                <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
-                  <Icon
-                    icon="lineicons:vimeo"
-                    className="text-[23px] text-gray-400"
-                  />
-                </span>
-                <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
-                  <Icon
-                    icon="ri:google-line"
-                    className="text-[23px] text-gray-400"
-                  />
-                </span>
-              </div>
-            </div>
-          </div>
+              <img
+                src={`http://192.168.100.155:4000${imageUrl}`}
+                alt={`thumbnail-${idx}`}
+                className={`w-full h-full object-cover ${
+                  selectedImageIndex === idx
+                    ? "opacity-100"
+                    : "opacity-90"
+                }`}
+              />
+            </span>
+          ))}
         </div>
       </div>
+
+      {/* Main Image Container */}
+      <div className="lg:w-[70%] w-[100%] mx-auto lg:mx-0 lg:ml-0 ml-2 h-[100%]">
+        <Swiper
+          spaceBetween={10}
+          slidesPerView={1}
+          onSlideChange={(swiper) =>
+            setSelectedImageIndex(swiper.activeIndex)
+          }
+          onSwiper={(swiper) => (swiperRef.current = swiper)}
+        >
+          {product.imageUrls?.map((imageUrl, idx) => (
+            <SwiperSlide key={idx}>
+              <div
+                className="relative overflow-hidden lg:w-full w-[80%] mx-auto h-full"
+                onMouseMove={(e) => handleMouseMove(e, idx)}
+                style={{ cursor: "zoom-in" }}
+              >
+                <img
+                  src={`http://192.168.100.155:4000${imageUrl}`}
+                  alt={`selected-${idx}`}
+                  className={`w-full h-[70vh] object-cover transition-transform duration-300 ${
+                    idx === 0 ? "lg:py-0 md:py-10 py-10" : "py-0"
+                  }`}
+                  style={{ transition: "transform 0.1s" }}
+                  onMouseEnter={(e) =>
+                    (e.target.style.transform = "scale(1.7)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.style.transform = "scale(1)")
+                  }
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </div>
+  )}
+
+  <div className="lg:w-[50%]  w-full h-full lg:-mt-2 md:mt-8 mt-10 px-4">
+    <h1 className="text-[24px] font-Poppins text-[#222] font-semibold">
+      {product.name}
+    </h1>
+    <div className="flex mt-3 gap-2 items-center">
+      <Rating
+        name="simple-controlled"
+        value={value}
+        onChange={(event, newValue) => {
+          setValue(newValue);
+        }}
+      />
+      <span className="text-[13px] font-Poppins text-[#6b6b6b]">
+        (5 Reviews)
+      </span>
+    </div>
+    <h3 className="text-[27px] font-Poppins leading-[28px]  text-[#5EC1A1]  mt-8">
+      ${product.discountedPrice?.toFixed(0)}
+    </h3>
+    <del className="text-[18px] font-Poppins leading-[28px] text-[#222] ">
+      {product.price}
+    </del>
+    <span className="text-[18px] font-Poppins leading-[28px] px-3 text-[#222]">
+      {product.discount}%
+    </span>
+    <p className="text-[14px] font-Poppins mt-5 text-[#222] w-[90%]">
+      {product.heading}
+    </p>
+    <div className="flex mt-6 gap-2">
+      <span className="text-gray-400 font-Poppins py-1">Color :</span>
+      <div className="relative lg:w-[17%] w-auto">
+        <Listbox value={selectedStatus} onChange={setSelectedStatus}>
+          <Listbox.Button className="w-full appearance-none outline-none border-gray-100 border-[2px] py-1 font-Poppins text-[15px] px-2 bg-transparent text-[#666666] flex justify-between items-center">
+            {
+              statuses.find((status) => status.value === selectedStatus)
+                .label
+            }
+            <ChevronDownIcon className="h-5 w-5 fill-[#666666]" />
+          </Listbox.Button>
+          <Listbox.Options className="absolute mt-2 w-full bg-white border border-[#666666] rounded shadow-lg z-10">
+            {statuses.map((status) => (
+              <Listbox.Option
+                key={status.value}
+                value={status.value}
+                className={({ active }) =>
+                  `cursor-pointer select-none px-4 py-2 ${
+                    active ? "bg-gray-200 text-[#222]" : "text-[#666666]"
+                  }`
+                }
+              >
+                {status.label}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </Listbox>
+      </div>
+    </div>
+
+    <div className="flex lg:flex-row  md:flex-row flex-col mt-8">
+      <div className="lg:w-[150px] md:w-[150px] w-[200px]  h-[50px] flex items-center justify-between border rounded-md overflow-hidden">
+        <button
+          onClick={decrement}
+          className="w-10 h-full flex items-center justify-center  hover:bg-gray-300"
+        >
+          <Icon icon="line-md:minus" className="text-xl text-[#666666]" />
+        </button>
+
+        <span className="flex-1 text-center text-[#666666]">
+          {quantity}
+        </span>
+
+        <button
+          onClick={increment}
+          className="w-10 h-full flex items-center justify-center hover:bg-gray-300"
+        >
+          <Icon icon="line-md:plus" className="text-xl text-[#666666]" />
+        </button>
+      </div>
+
+      <div
+        onClick={() => handleAddToCart(product)}
+        className="lg:ml-8 cursor-pointer md:ml-8 ml-0 lg:mt-0 md:mt-0 mt-5 lg:w-[42%] md:w-[42%] w-[90%] lg:py-0 md:py-0 py-2  bg-[#5EC1A1] flex items-center  gap-2 justify-center"
+      >
+        {loading ? (
+          <CircularProgress size={40} sx={{ color: "white" }} />
+        ) : (
+          <>
+            <Icon
+              icon="iconoir:add-to-cart"
+              className="text-white text-[20px]"
+            />
+            <span className="text-white font-Poppins">'Add to Cart'</span>
+          </>
+        )}
+      </div>
+    </div>
+    <div className="flex gap-4 mt-4">
+      <div className="flex items-center gap-2 group cursor-pointer hover:text-[#5EC1A1]">
+        <span>
+          <Icon
+            icon="line-md:heart"
+            className="text-gray-400  group-hover:text-[#5EC1A1] -mt-1 text-[22px]"
+          />
+        </span>
+        <span className="text-gray-400 font-Poppins text-[14px] group-hover:text-[#5EC1A1] hover:underline">
+          Add to Wishlist
+        </span>
+      </div>
+
+      <div className="flex items-center cursor-pointer gap-2 group hover:text-[#5EC1A1]">
+        <span>
+          {" "}
+          <Icon
+            icon="teenyicons:git-compare-outline"
+            className="text-gray-400 group-hover:text-[#5EC1A1]  -mt-1 text-[17px]"
+          />
+        </span>
+        <span className="text-gray-400 font-Poppins text-[14px] group-hover:text-[#5EC1A1] hover:underline py-1">
+          Add to Wishlist
+        </span>
+      </div>
+    </div>
+
+    <hr className="mt-4 bg-gray-900" />
+
+    <div className="flex mt-4 lg:flex-row md:flex-row flex-col gap-3 justify-between">
+      <div className="flex gap-4">
+        {" "}
+        <span className="text-gray-400 font-Poppins text-[15px]">
+          Categories :{" "}
+        </span>{" "}
+        <span className="text-gray-400 font-Poppins text-[15px]">
+          Electronics
+        </span>
+      </div>
+
+      <div className="flex gap-2 mr-4  items-center">
+        <h6 className="text-gray-400 font-Poppins text-[15px]">
+          Share On :{" "}
+        </h6>
+        <div className="flex items-center gap-4">
+          <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
+            <Icon
+              icon="line-md:facebook"
+              className="text-[23px] text-gray-400"
+            />
+          </span>
+          <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
+            <Icon
+              icon="line-md:instagram"
+              className="text-[23px] text-gray-400"
+            />
+          </span>
+          <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
+            <Icon
+              icon="lineicons:vimeo"
+              className="text-[23px] text-gray-400"
+            />
+          </span>
+          <span className="rounded-full border border-gray-300 p-1 hover:bg-blue-100 transition duration-200 ease-in-out cursor-pointer flex items-center justify-center">
+            <Icon
+              icon="ri:google-line"
+              className="text-[23px] text-gray-400"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+)}
+
+     
+
+
+
       {/* Reviews Section */}
       <div className="flex justify-center mt-12">
         <Box sx={{ width: "95%" }}>

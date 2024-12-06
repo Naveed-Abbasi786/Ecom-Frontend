@@ -8,17 +8,44 @@ import React, {
 import axios from "axios";
 // Context Setup
 import { toast } from "react-hot-toast";
-
 export const CartContext = createContext();
-
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const [user, setUser] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [subcategory, setSubCategories] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [fetchloading, setFetchLoading] = useState(false);
+  const [wishlistProducts, setWishlistProduct] = useState([]); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const API_URL = "http://192.168.100.106:4000/api/auth";
+  const token = localStorage.getItem("authToken");
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-  const addToCart = async (product, user_id,productQuantity,isLoggedIn) => {
+  useEffect(() => {
+    const fetchUsersData = async () => {
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_URL}api/auth/user-details`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserId(response?.data?._id);
+        setIsLoggedIn(true);
+        setUser(response?.data);
+      } catch (error) {
+        setIsLoggedIn(false);
+      } finally {
+        setIsLoggedIn(true);
+      }
+    };
+
+    fetchUsersData();
+  }, [isLoggedIn]);
+
+  const addToCart = async (product, user_id, productQuantity) => {
     if (!isLoggedIn) {
       alert("Please login");
       return;
@@ -30,26 +57,82 @@ export const CartProvider = ({ children }) => {
       quantity: productQuantity,
     };
 
+    // Using toast.promise
+    toast
+      .promise(
+        (async () => {
+          setFetchLoading(true);
+          const response = await axios.post(
+            `${API_URL}api/cart/add`,
+            cart
+          );
+          fetchCartData();
+        })(),
+        {
+          loading: "Adding to cart...",
+          success: "Added to cart successfully 👌",
+          error: "Failed to add to cart 🤯",
+        }
+      )
+      .finally(() => {
+        setFetchLoading(false);
+      });
+  };
+
+  const addToWishlist = async (product, user_id) => {
+    if (!isLoggedIn) {
+      alert("Please login");
+      return;
+    }
+
+    const cart = {
+      productId: product._id,
+      userId: user_id,
+    };
+
     try {
       setFetchLoading(true);
-
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/cart/add",
+        `${API_URL}api/cat/product/like`,
         cart
       );
-
-      fetchUserData();
-      toast.success("Added to cart successfully 👌");
+      fetchWishlistProducts();
+      toast.success(
+        response?.data?.message || "Added to wishlist successfully 👌"
+      );
     } catch (error) {
       console.log(error);
-      toast.error("Failed to add to cart 🤯");
+      toast.error("Failed to add to wishlist 🤯");
     } finally {
       setFetchLoading(false);
     }
   };
 
-  const fetchUserData = useCallback(async () => {
-    const token = localStorage.getItem("authToken");
+
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchHomeCategoryData = async () => {
+      try {
+        setCategoryLoading(true);
+        const response = await axios.get(
+          `${API_URL}api/cat/categories`
+        );
+        const fetchedCategories = response?.data?.categories?.slice(0, 4);
+        setCategories(fetchedCategories);
+      } catch (error) {
+        setCategoryLoading(false);
+        console.error("Error fetching categories:", error);
+      } finally {
+        setCategoryLoading(false);
+      }
+    };
+
+    fetchHomeCategoryData();
+  }, []);
+
+  const fetchCartData = async () => {
     if (!token) {
       setIsLoggedIn(false);
       return;
@@ -57,19 +140,13 @@ export const CartProvider = ({ children }) => {
 
     try {
       setFetchLoading(true);
-      const response = await axios.get(`${API_URL}/user-details`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      setUserId(response.data._id);
-      setIsLoggedIn(true);
-
-      if (response.data._id) {
+      if (userId) {
         const cartResponse = await axios.post(
-          `http://192.168.100.106:4000/api/cart/getcart`,
-          { userId: response.data._id }
+          `${API_URL}api/cart/getcart`,
+          { userId: userId }
         );
-        setCartItems(cartResponse.data.cart.items);
+        setCartItems(cartResponse?.data?.cart.items || []);
       }
     } catch (error) {
       setIsLoggedIn(false);
@@ -77,11 +154,34 @@ export const CartProvider = ({ children }) => {
     } finally {
       setFetchLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    fetchCartData();
+  },[token,userId]);
+
+  const fetchWishlistProducts = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}api/cat/product/liked`,
+        { userId: userId }
+      );
+
+      const activeProducts = response?.data.filter(
+        (product) => !product.isDeleted && product.isPublic
+      );
+      console.log("Fetched wishlist products:", response?.data);
+      setWishlistProduct(activeProducts);
+    } catch (error) {
+      console.error("Error fetching wishlist products:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchWishlistProducts();
+    }
+  }, [userId]);
 
   const updateCart = async (productId, newQuantity) => {
     try {
@@ -97,17 +197,17 @@ export const CartProvider = ({ children }) => {
       };
 
       const response = await axios.post(
-        `http://192.168.100.106:4000/api/cart/updatecart`,
+        `${API_URL}api/cart/updatecart`,
         cartItem
       );
-      fetchUserData();
-
-      if (response.data.success) {
-        setCartItems((prevCart) =>
-          prevCart.map((item) =>
-            item._id === productId ? { ...item, quantity: newQuantity } : item
-          )
-        );
+      // fetchCartData();
+setCartItems(response.data.cart.items)
+      if (response?.data.success) {
+        // setCartItems((prevCart) =>
+        //   prevCart.map((item) =>
+        //     item._id === productId ? { ...item, quantity: newQuantity } : item
+        //   )
+        // );
       }
     } catch (error) {
       console.log(error);
@@ -146,11 +246,11 @@ export const CartProvider = ({ children }) => {
     };
     try {
       const response = await axios.post(
-        `http://192.168.100.106:4000/api/cart/remove`,
+        `${API_URL}api/cart/remove`,
         cartItemdelete
       );
 
-      fetchUserData();
+      fetchCartData();
       // setTimeout(() => {
       //   notifySuccess("You successfully deleted");
       // }, 1000);
@@ -159,16 +259,45 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const fetchSubCategories = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}api/admin/subcategories`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response?.data.subCategorirs);
+      setSubCategories(response?.data.subCategorirs);
+      setFilteredData(response?.data.subCategorirs);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   return (
     <CartContext.Provider
       value={{
         addToCart,
-        fetchUserData,
+        fetchCartData,
         fetchloading,
+        addToWishlist,
         cartItems,
         incrementQuantity,
         decrementQuantity,
         handleDelete,
+        wishlistProducts,
+        subcategory,
+        fetchWishlistProducts,
+        fetchSubCategories,
+        userId,
+        user,
+        token,
+        categoryLoading,
+        categories,
+        filteredData,
         setCartItems,
       }}
     >

@@ -10,6 +10,7 @@ import {
 import { CircularProgress } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const TABLE_HEAD = [
   "Product Name",
@@ -32,22 +33,20 @@ export default function ProductsTable() {
   const [loading, setLoading] = useState(false);
   const [viewAll, setViewAll] = useState(false);
   const [status, setStatus] = useState(false);
-
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const itemsPerPage = 5;
   const token = localStorage.getItem("authToken");
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          "http://192.168.100.106:4000/api/admin/products",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${API_URL}api/admin/products`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const activeProducts = response.data.products.filter(
           (product) => !product.isDeleted
         );
+        console.log(response.data.products);
         setAllProducts(activeProducts);
         setFilteredProducts(activeProducts.slice(0, itemsPerPage));
       } catch (error) {
@@ -77,50 +76,53 @@ export default function ProductsTable() {
 
     try {
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/admin/product/id",
+        `${API_URL}api/admin/product/id`,
         { productId: _id },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log("Successfully deleted");
-
-      // Remove the product from the state
       const updatedProducts = filteredProducts.filter(
         (product) => product?._id !== _id
       );
       setFilteredProducts(updatedProducts);
       setAllProducts(allProducts.filter((product) => product?._id !== _id));
-
-      alert("Product deleted successfully!");
+      toast.success("Product deleted successfully!");
     } catch (error) {
       console.log(error);
     }
   };
-
   const [statusMap, setStatusMap] = useState({});
 
-  const handleStatus = async (_id) => {
-    setStatusMap((prevStatusMap) => {
-      const newStatus = !prevStatusMap[_id];
-      return { ...prevStatusMap, [_id]: newStatus };
-    });
-
+  const handleStatus = async (_id, product) => {
     try {
+      const newStatus = !(statusMap[_id] ?? product.isPublic);
+      setStatusMap((prev) => ({ ...prev, [_id]: newStatus }));
+
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/admin/product/toggle-status",
+        `${API_URL}api/admin/product/toggle-status`,
         {
           productId: _id,
-          isPublic: statusMap[_id],
+          isPublic: newStatus,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      console.log("Successfully toggled visibility for product ID:", _id);
+      const { message } = response.data;
+
+      toast.success(message);
+
+      product.isPublic = newStatus;
+
+      console.log(
+        `Product ID ${_id} is now ${newStatus ? "Public" : "Private"}`
+      );
     } catch (error) {
-      console.log("Error:", error);
+      console.error("Error toggling status:", error);
+      toast.error("Failed to update product status");
     }
   };
 
@@ -163,150 +165,161 @@ export default function ProductsTable() {
   };
 
   return (
-    <div className="w-full flex bg-transparent flex-col items-center">
-      <Card className="w-full shadow-none bg-transparent max-w-[100%]">
-        <CardHeader
-          floated={false}
-          shadow={false}
-          className="rounded-none bg-transparent flex justify-between items-center"
-        >
-          <div className="relative w-72 ml-2">
-            <div className="absolute inset-y-0 left-3 flex items-center">
-              <Icon icon="mdi:magnify" className="text-gray-500" />
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
+      <div className="w-full flex bg-transparent flex-col items-center">
+        <Card className="w-full shadow-none bg-transparent max-w-[100%]">
+          <CardHeader
+            floated={false}
+            shadow={false}
+            className="rounded-none bg-transparent flex justify-between items-center"
+          >
+            <div className="relative w-72 ml-2">
+              <div className="absolute inset-y-0 left-3 flex items-center">
+                <Icon icon="mdi:magnify" className="text-gray-500" />
+              </div>
+              <input
+                className="peer h-full w-full pl-10 rounded-[7px] border border-blue-gray-200 px-3 py-2.5 text-sm font-normal text-blue-gray-700 placeholder-shown:border placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:outline-none"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              className="peer h-full w-full pl-10 rounded-[7px] border border-blue-gray-200 px-3 py-2.5 text-sm font-normal text-blue-gray-700 placeholder-shown:border placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:outline-none"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div>
-            <Icon
-              icon={
-                sortOrders.name === "asc"
-                  ? "mdi:sort-ascending"
-                  : "mdi:sort-descending"
-              }
-              className="text-gray-600 text-2xl cursor-pointer"
-              onClick={() => sortProducts("name")}
-            />
-          </div>
-        </CardHeader>
+            <div>
+              <Icon
+                icon={
+                  sortOrders.name === "asc"
+                    ? "mdi:sort-ascending"
+                    : "mdi:sort-descending"
+                }
+                className="text-gray-600 text-2xl cursor-pointer"
+                onClick={() => sortProducts("name")}
+              />
+            </div>
+          </CardHeader>
 
-        <CardBody className="overflow-auto px-0 h-[400px]">
-          <table className="mt-4 w-full text-left">
-            <thead>
-              <tr>
-                {TABLE_HEAD.map((head, index) => (
-                  <th
-                    key={head}
-                    className="border-y text-black border-blue-gray-100 bg-blue-gray-50/50 p-4  font-normal"
-                  >
-                    {head}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <CardBody className="overflow-auto px-0 h-[400px]">
+            <table className="mt-4 w-full text-left">
+              <thead>
                 <tr>
-                  <td colSpan={TABLE_HEAD.length} className="text-center p-4">
-                    <div className="flex items-center justify-center items-center  h-full">
-                      <div className="mx-auto mt-36">
-                        <CircularProgress />
-                      </div>
-                    </div>
-                  </td>
+                  {TABLE_HEAD.map((head, index) => (
+                    <th
+                      key={head}
+                      className="border-y text-black border-blue-gray-100 bg-blue-gray-50/50 p-4  font-normal"
+                    >
+                      {head}
+                    </th>
+                  ))}
                 </tr>
-              ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product, index) => (
-                  <tr key={index}>
-                    <td className="p-4 border-b  text-black flex items-center gap-4 border-blue-gray-50">
-                      <Avatar
-                        src={`http://192.168.100.106:4000${product.imageUrls[0]}`}
-                        alt={product.name}
-                        className="w-12 h-12"
-                      />
-                      {product.name}
-                    </td>
-                    <td className="p-4 border-b text-[#000000] border-blue-gray-50">
-                      {product.subCategory?.category?.name}
-                    </td>
-                    <td className="p-4 border-b border-blue-gray-50">
-                      {product.subCategory?.name}
-                    </td>
-                    <td className="p-4 border-b border-blue-gray-50">
-                      {product.price}
-                    </td>
-                    <td className="p-4 border-b border-blue-gray-50">
-                      {product.quantity > 0
-                        ? `Available: ${product.quantity}`
-                        : "Out of Stock"}
-                    </td>
-                    <td className="p-4 border-b  border-blue-gray-50">
-                      <div className="flex gap-2">
-                        <Icon
-                          icon="ic:round-edit"
-                          className="text-[23px] cursor-pointer text-gray-800 hover:text-red-800"
-                          onClick={() => hanldeEdit(product._id)}
-                        />
-                        <Icon
-                          icon={`${statusMap[product._id] ? "mdi:eye-lock-outline" : "iconamoon:eye"}`}
-                          className={` ${statusMap[product._id] ? "text-red-800" : "text-gray-800"} text-[23px]  cursor-pointer hover:text-sky-700`}
-                          onClick={() => handleStatus(product._id)}
-                        />
-
-                        <Icon
-                          icon="mdi:delete-outline"
-                          className="text-[23px] cursor-pointer text-gray-800 hover:text-red-500"
-                          onClick={() => handleDelete(product._id)}
-                        />
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={TABLE_HEAD.length} className="text-center p-4">
+                      <div className="flex items-center justify-center  h-full">
+                        <div className="mx-auto mt-36">
+                          <CircularProgress />
+                        </div>
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="p-4 mt-40 text-center">
-                    No products available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </CardBody>
+                ) : filteredProducts.length > 0 ? (
+                  filteredProducts.map((product, index) => (
+                    <tr key={index}>
+                      <td className="p-4 border-b  text-black flex items-center gap-4 border-blue-gray-50">
+                        <Avatar
+                          src={`http://192.168.100.155:4000${product.imageUrls[0]}`}
+                          alt={product.name}
+                          className="w-12 h-12"
+                        />
+                        {product.name}
+                      </td>
+                      <td className="p-4 border-b text-[#000000] border-blue-gray-50">
+                        {product.subCategory?.category?.name}
+                      </td>
+                      <td className="p-4 border-b border-blue-gray-50">
+                        {product.subCategory?.name}
+                      </td>
+                      <td className="p-4 border-b border-blue-gray-50">
+                        {product.price}
+                      </td>
+                      <td className="p-4 border-b border-blue-gray-50">
+                        {product.quantity > 0
+                          ? `Available: ${product.quantity}`
+                          : "Out of Stock"}
+                      </td>
+                      <td className="p-4 border-b  border-blue-gray-50">
+                        <div className="flex gap-2">
+                          <Icon
+                            icon="ic:round-edit"
+                            className="text-[23px] cursor-pointer text-gray-800 hover:text-red-800"
+                            onClick={() => hanldeEdit(product._id)}
+                          />
+                          <Icon
+                            icon={`${
+                              (statusMap[product._id] ?? product.isPublic)
+                                ? "iconamoon:eye"
+                                : "mdi:eye-lock-outline"
+                            }`}
+                            className={`${
+                              (statusMap[product._id] ?? product.isPublic)
+                                ? "text-gray-800"
+                                : "text-red-800"
+                            } text-[23px] cursor-pointer hover:text-sky-700`}
+                            onClick={() => handleStatus(product._id, product)}
+                          />
 
-        {!viewAll && (
-          <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-            <button
-              disabled={currentPage === 1}
-              className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Previous
-            </button>
-            <Typography
-              variant="small"
-              color="blue-gray"
-              className="font-normal"
-            >
-              Page {currentPage} of{" "}
-              {Math.ceil(allProducts.length / itemsPerPage)}
-            </Typography>
-            <button
-              disabled={
-                currentPage === Math.ceil(allProducts.length / itemsPerPage)
-              }
-              className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === Math.ceil(allProducts.length / itemsPerPage) ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
-          </CardFooter>
-        )}
-      </Card>
-    </div>
+                          <Icon
+                            icon="mdi:delete-outline"
+                            className="text-[23px] cursor-pointer text-gray-800 hover:text-red-500"
+                            onClick={() => handleDelete(product._id)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="p-4 mt-40 text-center">
+                      No products available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </CardBody>
+
+          {!viewAll && (
+            <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
+              <button
+                disabled={currentPage === 1}
+                className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </button>
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-normal"
+              >
+                Page {currentPage} of{" "}
+                {Math.ceil(allProducts.length / itemsPerPage)}
+              </Typography>
+              <button
+                disabled={
+                  currentPage === Math.ceil(allProducts.length / itemsPerPage)
+                }
+                className={`px-4 py-2 bg-gray-200 text-gray-800 rounded-md ${currentPage === Math.ceil(allProducts.length / itemsPerPage) ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </CardFooter>
+          )}
+        </Card>
+      </div>
+    </>
   );
 }
 

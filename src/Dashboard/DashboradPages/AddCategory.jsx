@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CatgeroyTable from "../DashboradPages/Categorytable";
+// import SubcategoryTable from "./SubCategoryTable";
 import {
   TextField,
   Button,
@@ -10,195 +12,132 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
+import useDebounce from "../../Hook/useDebounce";
 
-const validationSchema = Yup.object({
-  categoryName: Yup.string().required("Category name is required"),
-  subcategoryName: Yup.string().required("Subcategory name is required"),
-});
-
-const AddCategory = () => {
-  const API_URL = "http://192.168.100.106:4000/api";
+const AddCategory = (porps) => {
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
-  const [laoding, setLoading] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const [load, setLoad] = useState(false);
-  const [categories, setCategories] = React.useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
+  const [cat, setCat] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [catName, setCatName] = useState("");
+  const [categoryImage, setCategoryImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
   const token = localStorage.getItem("authToken");
 
-  const handleAddCategory = async (values) => {
-    const name = values.categoryName;
-    console.log(values);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setCategoryImage(file);
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+    }
+  };
 
+  const handleAddCategory = useCallback(async (values) => {
+    const formData = new FormData();
+    formData.append("name", values.categoryName);
+    formData.append("categoryImage", categoryImage);
     try {
       setLoading(true);
-      await axios.post(
-        `${API_URL}/admin/category`,
-        { name: name },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`${API_URL}api/admin/category`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setCatName("");
+      setImagePreview("");
+      setCategoryImage("")
       notifySuccess("Successfully added category");
     } catch (error) {
-      console.log(error);
       notifyError(
-        "Error adding category: " +
-          (error.response?.data?.message || error.message)
+        `Error adding category: ${
+          error.response?.data?.message || error.message
+        }`
       );
     } finally {
       setLoading(false);
     }
-  };
-
-  const hanldeAddSubCategory = async (values) => {
-    try {
-      setLoad(true);
-      await axios.post(
-        "http://192.168.100.106:4000/api/admin/subcategory",
-        { 
-          name: values.subcategoryName, 
-          categoryId: selectedCategoryId 
-        },
-        {
-          headers: { Authorization:
-          `Bearer ${token}` },
-        }
-      );
-      notifySuccess("Succesfuly Add");
-    } catch (error) {
-      setLoad(false);
-      console.log(error);
-    } finally {
-      setLoad(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(`http://192.168.100.106:4000/api/cat/categories`);
-        setCategories(response?.data.categories);
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    // Initial fetch
-    fetchUserData();
-
-    // Polling every 5 seconds
-    const intervalId = setInterval(fetchUserData, 5000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
+  },);
 
   return (
-    <div className="flex">
-      <ToastContainer />
-      {/* Add Category Section */}
-      <div className="w-[50%] border-r p-4">
-        <h5 className="text-lg font-bold mb-4">Add Category</h5>
-        <Formik
-          initialValues={{
-            categoryName: "",
-          }}
-          validationSchema={Yup.object({
-            categoryName: Yup.string().required("Category name is required"),
-          })}
-          onSubmit={handleAddCategory}
-        >
-          {({ setFieldValue, errors, touched }) => (
-            <Form className="space-y-5">
-              <TextField
-                label="categoryName"
-                variant="outlined"
-                fullWidth
-                error={touched.categoryName && Boolean(errors.categoryName)}
-                helperText={touched.categoryName && errors.categoryName}
-                onChange={(e) => setFieldValue("categoryName", e.target.value)}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                {laoding ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Add Category"
-                )}
-              </Button>
-            </Form>
-          )}
-        </Formik>
-      </div>
+    <>
+      <div className="">
+        <ToastContainer />
+        {/* Add Category Section */}
+        <div className="w-[100%] border-r p-4">
+          <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
+            Add Category
+          </h5>
+          <Formik
+            initialValues={{ categoryName: "" }}
+            validationSchema={Yup.object({
+              categoryName: Yup.string().required("Category name is required"),
+            })}
+            onSubmit={(values, { resetForm }) =>
+              handleAddCategory(values, resetForm)
+            }
+          >
+            {({ setFieldValue, errors, touched }) => (
+              <Form className="space-y-5">
+                <TextField
+                  label="Category Name"
+                  variant="outlined"
+                  fullWidth
+                  value={catName} // State value
+                  onChange={(e) => {
+                    setCatName(e.target.value); // Update state
+                    setFieldValue("categoryName", e.target.value); // Update Formik field value
+                  }}
+                  error={touched.categoryName && Boolean(errors.categoryName)}
+                  helperText={touched.categoryName && errors.categoryName}
+                />
 
-      {/* Add Subcategory Section */}
-      <div className="w-[50%] p-4">
-        <h5 className="text-lg font-bold mb-4">Add Subcategory</h5>
-        <Formik
-          initialValues={{
-            subcategoryName: "",
-            category: null,
-          }}
-          validationSchema={Yup.object({
-            subcategoryName: Yup.string().required(
-              "Subcategory name is required"
-            ),
-            category: Yup.object().nullable().required("Category is required"),
-          })}
-          onSubmit={hanldeAddSubCategory}
-          //   (values) => {
-          //   resetForm();
-          //   console.log('Subcategory added:', values);
-          // }}
-        >
-          {({ setFieldValue, values, errors, touched }) => (
-            <Form className="space-y-5">
-              <Autocomplete
-                options={categories}
-                getOptionLabel={(option) => option?.name || ""}
-                onChange={(event, newValue) => {
-                  setFieldValue("category", newValue);
-                  if (newValue) {
-                    setSelectedCategoryId(newValue?._id);
-                    console.log("Selected Category ID:", newValue._id);
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select a Category"
+                <div className="flex">
+                  <Button
                     variant="outlined"
-                    error={touched.category && Boolean(errors.category)}
-                    helperText={touched.category && errors.category}
-                  />
+                    component="label"
+                    className="w-full mb-2"
+                  >
+                    Upload Category Image
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </Button>
+                </div>
+                {imagePreview && (
+                  <div className="w-full h-[16vh] flex justify-center">
+                    <img
+                      src={imagePreview}
+                      alt=""
+                      className="w-[120px] h-full object-contain shadow-inner rounded-full"
+                    />
+                  </div>
                 )}
-              />
-              <TextField
-                // name="subcategoryName"
-                label="Subcategory Name"
-                variant="outlined"
-                fullWidth
-                error={
-                  touched.subcategoryName && Boolean(errors.subcategoryName)
-                }
-                onChange={(e) =>
-                  setFieldValue("subcategoryName", e.target.value)
-                }
-                helperText={touched.subcategoryName && errors.subcategoryName}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                {load ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "  Add Subcategory"
-                )}
-              </Button>
-            </Form>
-          )}
-        </Formik>
+
+                <div className="flex justify-center">
+                  <Button type="submit" variant="contained" color="primary">
+                    {loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Add Category"
+                    )}
+                  </Button>
+                </div>
+              </Form>
+            )}
+          </Formik>
+        </div>
+        <CatgeroyTable handleAddCategory={handleAddCategory} />
       </div>
-    </div>
+    </>
   );
 };
 

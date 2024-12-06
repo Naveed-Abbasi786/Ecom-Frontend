@@ -10,7 +10,7 @@ import LinearProgress, {
 import styled from "@emotion/styled";
 import { CartContext } from "../Context/Context";
 import Products from "./Products";
-import Empty from '../assets/img/empty-cart.png'
+import Empty from "../assets/img/empty-cart.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -36,7 +36,7 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
   const [shippingOpen, setShippingOpen] = useState(false);
   const [couponCodeOpen, setCouponCodeOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("Pakistan");
-
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const {
     incrementQuantity,
     fetchloading,
@@ -44,8 +44,6 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
     cartItems,
     handleDelete,
   } = useContext(CartContext);
-
-  const API_URL = "http://192.168.100.106:4000/api/auth";
 
   const handleSectionToggle = (sectionSetter) => {
     setInfoOpen(false);
@@ -186,21 +184,22 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
                   key={index}
                   className="w-full cursor-pointer border h-[18vh] flex items-center mb-2"
                 >
-                  <div 
-                  //  onClick={() => handleProductDetails(product._id,event)}
-                   className="ml-2 w-[30%] h-[60%] border">
+                  <div
+                    //  onClick={() => handleProductDetails(product._id,event)}
+                    className="ml-2 w-[30%] h-[60%] border"
+                  >
                     <img
-                      src={`http://192.168.100.106:4000${product.product.imageUrls[0]}`}
-                      alt={product.name}
+                      src={`http://192.168.100.155:4000${product?.product?.imageUrls[0]}`}
+                      alt={product?.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-[100%] px-3">
                     <h5 className="text-[16px] text-[#333333]">
-                      {product.product.name}
+                      {product?.product?.name}
                     </h5>
                     <p className="text-[16px] text-[#333333]">
-                      ${product.product.price}
+                      ${product?.product?.price}
                     </p>
                   </div>
                   <div className="w-full sm:w-[30%] mr-2 mt-5">
@@ -445,7 +444,7 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
               <input
                 type="text"
                 placeholder="Your Code here"
-                className="w-full border-2  text-[#666666] border py-1 px-2 outline-none"
+                className="w-full border-2  text-[#666666]  py-1 px-2 outline-none"
               />
               <p className="text-[#666666] font-Poppins text-[13px] py-2">
                 Coupon code calculated at checkout

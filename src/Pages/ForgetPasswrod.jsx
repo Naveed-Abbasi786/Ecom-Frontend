@@ -15,13 +15,14 @@ export default function ForgetPassword() {
     const [loading, setloading] = useState(false);
     const notifySuccess = (message) => toast.success(message);
     const notifyError = (message) => toast.error(message);
-    const API_URL = "http://192.168.100.106:4000/api/auth";
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
     const handleForgetPassword= async(values)=>{
         const origin=window.location.origin
        const email= values.email
         try {
           setloading(true)
-          const response = await axios.post(`${API_URL}/forgot-password`,{email,origin});
+          const response = await axios.post(`${API_URL}api/auth/forgot-password`,{email,origin});
           notifySuccess('Succusfully forgot')
         } catch (error) {
           notifyError(error)

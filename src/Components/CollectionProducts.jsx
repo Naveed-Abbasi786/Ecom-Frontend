@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import { CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import toast from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import { CartContext } from "../Context/Context";
 import { Toaster } from "react-hot-toast";
@@ -15,109 +15,70 @@ export default function CollectionProducts() {
   const [products, setProducts] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [porductLoading, setProductloading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState("");
-  const { addToCart } = useContext(CartContext);
-  const API_URL = "http://192.168.100.106:4000/api/auth";
-  const notifySuccess = (message) => toast.success(message);
-  const notifyError = (message) => toast.error(message);
+  const { addToCart, addToWishlist, user, token } = useContext(CartContext);
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        setIsLoggedIn(false);
-        return;
-      }
-
-      try {
-        const response = await axios.get(`${API_URL}/user-details`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(response.data);
-        setIsLoggedIn(true);
-      } catch (error) {
-        setIsLoggedIn(false);
-        console.log(error);
-      }
-    };
-
-    fetchUserData();
-  }, [isLoggedIn]);
-
-  // const handleAddToCart = async (product, event) => {
-  //  event.stopPropagation();
-  //   addToCart(product,user._id);
-  //   alert(`${product.name} has been added to the cart!`);
-  //   if (!isLoggedIn) {
-  //     alert("Please login");
-  //     return;
-  //   }
-
-  //   const cart = {
-  //     productId: product._id,
-  //     userId: user._id,
-  //     quantity: 1,
-  //   };
-
-  // const resolveAfter3Sec = new Promise((resolve, reject) => {
-  //   setTimeout(() => {
-  //     axios
-  //       .post("http://192.168.100.106:4000/api/cart/add", cart)
-  //       .then((response) => {
-  //         resolve("Added to cart successfully");
-  //       })
-  //       .catch((error) => {
-  //         reject("Error adding to cart");
-  //       });
-  //   }, 2000);
-  // });
-
-  // toast.promise(resolveAfter3Sec, {
-  //   pending: "Adding to cart...",
-  //   success: "Added to cart successfully 👌",
-  //   error: "Failed to add to cart 🤯",
-  // });
-  // };
 
   const handleAddToCart = (product, event) => {
     event.stopPropagation();
     const productQuantity = 1;
-    addToCart(product, user._id, productQuantity, isLoggedIn);
+    addToCart(product, user._id, productQuantity);
   };
 
   const fetchProducts = async (categoryId) => {
-    setLoading(true);
+    setProductloading(true);
     setSelectedCategoryId(categoryId);
     try {
-      const response = await axios.post(
-        `http://192.168.100.106:4000/api/cat/products/category`,
-        { categoryId }
-      );
+      const response = await axios.post(`${API_URL}api/cat/products/category`, {
+        categoryId,
+      });
 
       const activeProducts = response?.data.products.filter(
         (product) => !product.isDeleted && product.isPublic
       );
+      console.log(activeProducts);
       setProducts(activeProducts);
     } catch (error) {
-      notifyError(error);
+      setProductloading(false);
       console.error("Error fetching products:", error);
     } finally {
-      setLoading(false);
+      setProductloading(false);
     }
+  };
+  const updateProductInState = (updatedProduct) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product._id === updatedProduct._id ? updatedProduct : product
+      )
+    );
+  };
+  const handleAddToWhislist = (product, event) => {
+    event.stopPropagation();
+
+    const updatedProduct = { ...product };
+
+    if (updatedProduct.likedBy?.includes(user._id)) {
+      updatedProduct.likedBy = updatedProduct.likedBy.filter(
+        (id) => id !== user._id
+      );
+    } else {
+      updatedProduct.likedBy = [...(updatedProduct.likedBy || []), user._id];
+    }
+
+    updateProductInState(updatedProduct);
+
+    addToWishlist(updatedProduct, user._id, isLoggedIn);
   };
 
   const filterValidCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://192.168.100.106:4000/api/cat/categories`
-      );
-      const fetchedCategories = response.data.slice(0, 5);
+      const response = await axios.get(`${API_URL}api/cat/categories`);
+      const fetchedCategories = response?.data?.categories?.slice(0, 5);
       setCategories(fetchedCategories);
 
       if (fetchedCategories.length > 0) {
@@ -134,12 +95,16 @@ export default function CollectionProducts() {
   };
 
   useEffect(() => {
-    filterValidCategories();
+    if (categories.length === 0) {
+      filterValidCategories();
+    }
   }, []);
 
   const handleTabClick = (idx, categoryId) => {
-    setSelectedTab(idx);
-    fetchProducts(categoryId);
+    if (categoryId !== selectedCategoryId) {
+      setSelectedTab(idx);
+      fetchProducts(categoryId);
+    }
   };
 
   const handleProductClick = (productId) => {
@@ -148,7 +113,7 @@ export default function CollectionProducts() {
 
   return (
     <div>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="bottom-right" reverseOrder={false} />
       <div className="h-full mt-20">
         <h1 className="text-center text-[#222222] text-[40px] font-semibold font-Josefi">
           Our Top Collection
@@ -195,7 +160,7 @@ export default function CollectionProducts() {
                       onClick={() => handleProductClick(product._id)}
                       className="group relative bg-gray-100 w-full h-full"
                     >
-                      {loading || imageLoading ? (
+                      {porductLoading || imageLoading ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                           <CircularProgress />
                         </div>
@@ -203,7 +168,7 @@ export default function CollectionProducts() {
                         <>
                           {/* Default Image */}
                           <img
-                            src={`http://192.168.100.106:4000${product.imageUrls[0]}`}
+                            src={`http://192.168.100.155:4000${product.imageUrls[0]}`}
                             alt="Product"
                             onLoad={() => setImageLoading(false)}
                             onError={() => setImageLoading(false)}
@@ -215,7 +180,7 @@ export default function CollectionProducts() {
                           />
                           {/* Hover Image */}
                           <img
-                            src={`http://192.168.100.106:4000${product.imageUrls[1]}`}
+                            src={`http://192.168.100.155:4000${product.imageUrls[1]}`}
                             alt="Product Hover Image"
                             className="w-full h-full object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100 absolute top-0 left-0"
                           />
@@ -223,15 +188,15 @@ export default function CollectionProducts() {
                       )}
                     </div>
 
-                    {product.Status && !loading && (
+                    {product.discount && !loading && (
                       <div
                         className={`${
-                          product.Status === "Hot"
+                          product.discount > "10"
                             ? "bg-[#E73C2F]"
                             : "bg-[#5EC1A1]"
-                        } absolute z-50 status top-[2%] right-[3%]`}
+                        } absolute z-30 status top-[2%] right-[3%]`}
                       >
-                        {product.Status}
+                        {product.discount}%
                       </div>
                     )}
 
@@ -239,7 +204,14 @@ export default function CollectionProducts() {
                       <div className="absolute top-50 bottom-0 w-full flex justify-center gap-2 items-center text-white py-2 opacity-0 translate-y-full transition-all duration-500 ease-in-out group-hover:translate-y-0 group-hover:opacity-100">
                         <span>
                           <Icon
-                            icon="mdi-light:heart"
+                            icon={
+                              product.likedBy?.includes(user._id)
+                                ? "solar:heart-bold"
+                                : "mdi-light:heart"
+                            }
+                            onClick={(event) =>
+                              handleAddToWhislist(product, event)
+                            }
                             className="bg-gray-900 lg:text-[36px] text-[30px] hover:bg-[#5EC1A1] transition duration-300 py-2 cursor-pointer"
                           />
                         </span>

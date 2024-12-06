@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import Header from "../Components/Header";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
@@ -16,6 +16,7 @@ import {
 import axios from "axios";
 import Footer from "../Components/Footer";
 import toast, { Toaster } from "react-hot-toast";
+import { CartContext } from "../Context/Context";
 
 // Yup Validation Schema
 const validationSchema = Yup.object({
@@ -37,11 +38,12 @@ export default function CheckOut() {
   const [user, setUser] = useState("");
   const [loading, setLoading] = useState(false);
   const [cartTotal, setCartTotal] = useState(null);
-  const API_URL = "http://192.168.100.106:4000/api/auth";
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
 
-  const fetchUserData = useCallback(async () => {
+  const fetchsUserData = useCallback(async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
       setIsLoggedIn(false);
@@ -50,7 +52,7 @@ export default function CheckOut() {
 
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/user-details`, {
+      const response = await axios.get(`${API_URL}api/auth/user-details`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -60,7 +62,7 @@ export default function CheckOut() {
       if (response.data._id) {
         setLoading(true);
         const cartResponse = await axios.post(
-          `http://192.168.100.106:4000/api/cart/getcart`,
+            `${API_URL}api/cart/getcart`,
           { userId: response.data._id }
         );
         setCartItems(cartResponse.data.cart.items);
@@ -78,13 +80,20 @@ export default function CheckOut() {
   }, []);
 
   useEffect(() => {
-    fetchUserData();
+    fetchsUserData();
   }, []);
 
+  const { fetchCartData } = useContext(CartContext);
+
   const handleCheckOut = async (values, resetForm) => {
+    if (user.role === "admin") {
+      notifyError("Admin order nhi kr sakta");
+      return;
+    }
     const form = {
+      userId: user._id,
       name: `${values.firstName} ${values.lastName}`,
-      email: values.email,
+      email: user.email,
       contactNumber: values.contactnumber,
       billingAddress: values.Address,
       city: values.city,
@@ -98,22 +107,25 @@ export default function CheckOut() {
       })),
     };
 
-    console.log(form);
-
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://192.168.100.106:4000/api/checkout/create",
+        `${API_URL}api/checkout/create`,
         form
       );
       notifySuccess("Order placed successfully!");
       setCartItems([]);
       setCartTotal("");
+      fetchCartData();
       resetForm();
     } catch (error) {
       setLoading(false);
       console.log("Error:", error);
-      notifyError("Failed to place order. Please try again.");
+      notifyError(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to place order. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -245,6 +257,7 @@ export default function CheckOut() {
                           <TextField
                             {...field}
                             label="Email"
+                            value={user.email}
                             type="email"
                             fullWidth
                             error={touched.email && Boolean(errors.email)}
@@ -464,7 +477,7 @@ export default function CheckOut() {
                 cartItems.map((val, idx) => (
                   <div key={idx} className="w-full px-4 mt-2 flex">
                     <img
-                      src={`http://192.168.100.106:4000${val.product.imageUrls[0]}`}
+                      src={`http://192.168.100.155:4000${val.product.imageUrls[0]}`}
                       alt={val.product.name}
                       className="w-12 h-auto rounded-lg"
                     />
