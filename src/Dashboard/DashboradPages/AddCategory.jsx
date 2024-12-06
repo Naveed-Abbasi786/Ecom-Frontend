@@ -43,7 +43,7 @@ const AddCategory = (porps) => {
     formData.append("categoryImage", categoryImage);
     try {
       setLoading(true);
-      await axios.post(`${API_URL}api/admin/category`, formData, {
+      await axios.post(`${API_URL}/api/admin/category`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

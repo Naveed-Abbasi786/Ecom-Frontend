@@ -121,7 +121,7 @@ export default function HomePage({ productData }) {
               >
                 <div className="w-full h-full cursor-pointer rounded-full relative group overflow-hidden">
                   <img
-                    src={`http://192.168.100.155:4000${val.image}`}
+                    src={`${API_URL}${val.image}`}
                     alt=""
                     className="w-full h-full object-cover"
                   />

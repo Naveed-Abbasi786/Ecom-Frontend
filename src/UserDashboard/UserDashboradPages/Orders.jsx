@@ -39,7 +39,7 @@ export default function Orders() {
     if (!token) return;
 
     try {
-      const response = await axios.get(`${API_URL}api/auth/user-details`, {
+      const response = await axios.get(`${API_URL}/api/auth/user-details`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserEmail(response.data.email || "");
@@ -59,7 +59,7 @@ export default function Orders() {
       try {
         setLoading(true);
         const response = await axios.post(
-          `${API_URL}api/checkout/user-orders`,
+          `${API_URL}/api/checkout/user-orders`,
           { email: userEmail }
         );
 
@@ -169,7 +169,7 @@ export default function Orders() {
                     <tr key={index}>
                       <td className="p-4 border-b flex items-center gap-4 border-blue-gray-50">
                         <Avatar
-                          src={`http://192.168.100.155:4000${product.imageUrls?.[0]}`}
+                          src={`${API_URL}${product.imageUrls?.[0]}`}
                           alt={product.name}
                           className="w-12 h-12"
                         />

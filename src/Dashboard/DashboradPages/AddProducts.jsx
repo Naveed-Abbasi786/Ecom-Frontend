@@ -64,7 +64,7 @@ const AddProducts = () => {
       const fetchSubCategories = async () => {
         try {
           const response = await axios.post(
-            `${API_URL}api/cat/category/subcategories`,
+            `${API_URL}/api/cat/category/subcategories`,
             {
               categoryId: selectedCategoryId,
             }
@@ -127,7 +127,7 @@ const AddProducts = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${API_URL}api/admin/product`,
+        `${API_URL}/api/admin/product`,
         formData,
         {
           headers: {

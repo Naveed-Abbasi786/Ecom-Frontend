@@ -48,7 +48,7 @@ const BlogListTable = (props) => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await axios.get(`${API_URL}api/admin/blogs`, {
+      const response = await axios.get(`${API_URL}/api/admin/blogs`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ const BlogListTable = (props) => {
     }
     try {
       await axios.put(
-        `${API_URL}api/admin/subBLOG/id`,
+        `${API_URL}/api/admin/subBLOG/id`,
         { BLOGId: item.BLOG, subBLOGId: item._id, name: name },
         {
           headers: {
@@ -94,7 +94,7 @@ const BlogListTable = (props) => {
   const handleDelete = async (id, item) => {
     try {
       await axios.post(
-        `${API_URL}api/admin/subBLOG/id`,
+        `${API_URL}/api/admin/subBLOG/id`,
         { BLOGId: item.BLOG, subBLOGId: item._id },
         {
           headers: {

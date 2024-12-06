@@ -189,7 +189,7 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
                     className="ml-2 w-[30%] h-[60%] border"
                   >
                     <img
-                      src={`http://192.168.100.155:4000${product?.product?.imageUrls[0]}`}
+                      src={`${API_URL}${product?.product?.imageUrls[0]}`}
                       alt={product?.name}
                       className="w-full h-full object-cover"
                     />

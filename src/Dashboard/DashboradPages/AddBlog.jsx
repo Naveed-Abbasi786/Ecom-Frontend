@@ -61,7 +61,7 @@ export default function AddBlog() {
     });
     try {
       const response = await axios.post(
-        `${API_URL}api/admin/blog`,
+        `${API_URL}/api/admin/blog`,
         formData,
         {
           headers: {

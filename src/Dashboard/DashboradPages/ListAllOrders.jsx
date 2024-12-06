@@ -41,7 +41,7 @@ const OrderTable = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}api/admin/orders`, {
+      const response = await axios.get(`${API_URL}/api/admin/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -104,7 +104,7 @@ const OrderTable = () => {
     const StatusChanges = async () => {
       toast.promise(
         axios.put(
-          `${API_URL}api/admin/order/status`,
+          `${API_URL}/api/admin/order/status`,
           { orderId: selectedId, orderStatus: statuss },
           {
             headers: {
@@ -186,7 +186,7 @@ const OrderTable = () => {
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
                         <img
-                          src={`http://192.168.100.155:4000${product.imageUrls?.[0]}`}
+                          src={`${API_URL}${product.imageUrls?.[0]}`}
                           alt="Category"
                           className="w-10 h-10 rounded-full object-cover"
                         />

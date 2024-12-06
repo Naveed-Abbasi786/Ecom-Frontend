@@ -33,7 +33,7 @@ export default function CollectionProducts() {
     setProductloading(true);
     setSelectedCategoryId(categoryId);
     try {
-      const response = await axios.post(`${API_URL}api/cat/products/category`, {
+      const response = await axios.post(`${API_URL}/api/cat/products/category`, {
         categoryId,
       });
 
@@ -77,7 +77,7 @@ export default function CollectionProducts() {
   const filterValidCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}api/cat/categories`);
+      const response = await axios.get(`${API_URL}/api/cat/categories`);
       const fetchedCategories = response?.data?.categories?.slice(0, 5);
       setCategories(fetchedCategories);
 
@@ -168,7 +168,7 @@ export default function CollectionProducts() {
                         <>
                           {/* Default Image */}
                           <img
-                            src={`http://192.168.100.155:4000${product.imageUrls[0]}`}
+                            src={`${API_URL}${product.imageUrls[0]}`}
                             alt="Product"
                             onLoad={() => setImageLoading(false)}
                             onError={() => setImageLoading(false)}
@@ -180,7 +180,7 @@ export default function CollectionProducts() {
                           />
                           {/* Hover Image */}
                           <img
-                            src={`http://192.168.100.155:4000${product.imageUrls[1]}`}
+                            src={`${API_URL}${product.imageUrls[1]}`}
                             alt="Product Hover Image"
                             className="w-full h-full object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100 absolute top-0 left-0"
                           />

@@ -22,7 +22,7 @@ export default function ForgetPassword() {
        const email= values.email
         try {
           setloading(true)
-          const response = await axios.post(`${API_URL}api/auth/forgot-password`,{email,origin});
+          const response = await axios.post(`${API_URL}/api/auth/forgot-password`,{email,origin});
           notifySuccess('Succusfully forgot')
         } catch (error) {
           notifyError(error)

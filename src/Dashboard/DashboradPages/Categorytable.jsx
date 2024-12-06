@@ -56,7 +56,7 @@ const CategoryTable = (porps) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API_URL}api/cat/categories`);
+      const response = await axios.get(`${API_URL}/api/cat/categories`);
       setCategories(response?.data?.categories);
       setFilteredData(response?.data?.categories);
     } catch (error) {
@@ -76,7 +76,7 @@ const CategoryTable = (porps) => {
     const categoryId = editingId;
     try {
       const resposne = await axios.put(
-        `${API_URL}api/admin/category/id`,
+        `${API_URL}/api/admin/category/id`,
         { categoryId, name },
         {
           headers: {
@@ -96,7 +96,7 @@ const CategoryTable = (porps) => {
       console.log(token);
 
       const response = await axios.post(
-        `${API_URL}api/admin/category/id`,
+        `${API_URL}/api/admin/category/id`,
         { categoryId: id },
         {
           headers: {
@@ -302,8 +302,7 @@ const CategoryTable = (porps) => {
                               >
                                 <img
                                   src={
-                                    imagePreview ||
-                                    `http://192.168.100.155:4000${item.image}`
+                                    imagePreview || `${API_URL}${item.image}`
                                   }
                                   alt="Category"
                                   style={{

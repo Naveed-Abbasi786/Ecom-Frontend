@@ -49,7 +49,7 @@ export default function ShopingCart() {
     }
 
     try {
-      const response = await axios.get(`${API_URL}api/auth/user-details`, {
+      const response = await axios.get(`${API_URL}/api/auth/user-details`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -58,7 +58,7 @@ export default function ShopingCart() {
 
       if (response.data._id) {
         setLoading(true);
-        const cartResponse = await axios.post(`${API_URL}api/cart/getcart`, {
+        const cartResponse = await axios.post(`${API_URL}/api/cart/getcart`, {
           userId: response.data._id,
         });
         setCartItems(cartResponse.data.cart.items);
@@ -80,7 +80,7 @@ export default function ShopingCart() {
     };
     try {
       const response = await axios.post(
-        `${API_URL}api/cart/remove`,
+        `${API_URL}/api/cart/remove`,
         cartItemdelete
       );
 
@@ -105,7 +105,7 @@ export default function ShopingCart() {
       };
 
       const response = await axios.post(
-        `${API_URL}api/cart/updatecart`,
+        `${API_URL}/api/cart/updatecart`,
         cartItem
       );
       console.log("Cart Item Updated Successfully:", response.data);
@@ -259,7 +259,7 @@ export default function ShopingCart() {
                       <tr key={product.id} className="bg-white border-b">
                         <td className="px-6 mr-20 py-4 flex items-center">
                           <img
-                            src={`http://192.168.100.155:4000${product.product.imageUrls[0]}`}
+                            src={`${API_URL}${product.product.imageUrls[0]}`}
                             alt={product.name}
                             className="w-12 h-12 leading-[20px] mr-4 rounded"
                           />

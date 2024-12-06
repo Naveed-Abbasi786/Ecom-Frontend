@@ -30,7 +30,7 @@ export default function ResetPassword() {
     const newPassword = values.password;
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}api/auth/reset-password`, { newPassword, token });
+      const response = await axios.post(`${API_URL}/api/auth/reset-password`, { newPassword, token });
       notifySuccess('Password saved successfully');
       console.log('Response:', response);
     } catch (error) {

@@ -52,7 +52,7 @@ export default function CheckOut() {
 
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}api/auth/user-details`, {
+      const response = await axios.get(`${API_URL}/api/auth/user-details`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -62,7 +62,7 @@ export default function CheckOut() {
       if (response.data._id) {
         setLoading(true);
         const cartResponse = await axios.post(
-            `${API_URL}api/cart/getcart`,
+            `${API_URL}/api/cart/getcart`,
           { userId: response.data._id }
         );
         setCartItems(cartResponse.data.cart.items);
@@ -110,7 +110,7 @@ export default function CheckOut() {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}api/checkout/create`,
+        `${API_URL}/api/checkout/create`,
         form
       );
       notifySuccess("Order placed successfully!");
@@ -477,7 +477,7 @@ export default function CheckOut() {
                 cartItems.map((val, idx) => (
                   <div key={idx} className="w-full px-4 mt-2 flex">
                     <img
-                      src={`http://192.168.100.155:4000${val.product.imageUrls[0]}`}
+                      src={`${API_URL}${val.product.imageUrls[0]}`}
                       alt={val.product.name}
                       className="w-12 h-auto rounded-lg"
                     />

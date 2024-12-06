@@ -6,29 +6,30 @@ import Footer from "../Components/Footer";
 import { Link } from "react-router-dom";
 import { CartContext } from "../Context/Context";
 import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 const Wishlist = () => {
   const { wishlistProducts,userId, fetchWishlistProducts,addToWishlist } = useContext(CartContext);
 
-  const handleDelete = async () => {
+  const handleDelete = async (id) => {
+    const deletedData = {
+      userId: userId,
+      productId: id,
+    };
+  
     try {
-      addToWishlist(wishlistProducts,userId)
-    } 
-    catch (error) {
-      
-      toast.error(error)
-    }
-    finally{
+      const response = await axios.post(`${API_URL}/api/cat/product/unlike`, deletedData);
+      toast.success("Successfully deleted");
       fetchWishlistProducts()
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "An error occurred";
+      toast.error(errorMessage);
     }
   };
+  
 
-  // useEffect(() => {
-  //   if (wishlistProducts.length > 0) {
-  //     setLoading(false);
-  //   }
-  // }, [wishlistProducts]);
 
   return (
     <>
@@ -107,7 +108,7 @@ const Wishlist = () => {
                 <tr key={product.id} className="bg-white border-b">
                   <td className="px-6 py-4 flex items-center">
                     <img
-                      src={`http://192.168.100.155:4000${product.imageUrls[0]}`}
+                      src={`${API_URL}${product.imageUrls[0]}`}
                       alt={product.name}
                       className="w-12 h-12 leading-[20px] mr-4 rounded"
                     />
@@ -123,7 +124,7 @@ const Wishlist = () => {
                   </td>
                   <td
                     className="px-6 py-4 text-red-500 cursor-pointer"
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => handleDelete(product._id)}
                   >
                     <Icon
                       icon="mdi:close"

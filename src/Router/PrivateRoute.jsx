@@ -20,7 +20,7 @@ const PrivateRoute = ({ element, role }) => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}api/auth/user-details`, {
+        const response = await axios.get(`${API_URL}/api/auth/user-details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsAuthenticated(true);

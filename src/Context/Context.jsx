@@ -16,7 +16,7 @@ export const CartProvider = ({ children }) => {
   const [subcategory, setSubCategories] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [fetchloading, setFetchLoading] = useState(false);
-  const [wishlistProducts, setWishlistProduct] = useState([]); 
+  const [wishlistProducts, setWishlistProduct] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const token = localStorage.getItem("authToken");
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -29,7 +29,7 @@ export const CartProvider = ({ children }) => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}api/auth/user-details`, {
+        const response = await axios.get(`${API_URL}/api/auth/user-details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserId(response?.data?._id);
@@ -46,7 +46,7 @@ export const CartProvider = ({ children }) => {
   }, [isLoggedIn]);
 
   const addToCart = async (product, user_id, productQuantity) => {
-    if (!isLoggedIn) {
+    if (!token) {
       alert("Please login");
       return;
     }
@@ -62,10 +62,7 @@ export const CartProvider = ({ children }) => {
       .promise(
         (async () => {
           setFetchLoading(true);
-          const response = await axios.post(
-            `${API_URL}api/cart/add`,
-            cart
-          );
+          const response = await axios.post(`${API_URL}/api/cart/add`, cart);
           fetchCartData();
         })(),
         {
@@ -80,7 +77,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToWishlist = async (product, user_id) => {
-    if (!isLoggedIn) {
+    if (!token) {
       alert("Please login");
       return;
     }
@@ -93,7 +90,7 @@ export const CartProvider = ({ children }) => {
     try {
       setFetchLoading(true);
       const response = await axios.post(
-        `${API_URL}api/cat/product/like`,
+        `${API_URL}/api/cat/product/like`,
         cart
       );
       fetchWishlistProducts();
@@ -108,7 +105,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categories, setCategories] = useState([]);
 
@@ -116,9 +112,7 @@ export const CartProvider = ({ children }) => {
     const fetchHomeCategoryData = async () => {
       try {
         setCategoryLoading(true);
-        const response = await axios.get(
-          `${API_URL}api/cat/categories`
-        );
+        const response = await axios.get(`${API_URL}/api/cat/categories`);
         const fetchedCategories = response?.data?.categories?.slice(0, 4);
         setCategories(fetchedCategories);
       } catch (error) {
@@ -142,10 +136,9 @@ export const CartProvider = ({ children }) => {
       setFetchLoading(true);
 
       if (userId) {
-        const cartResponse = await axios.post(
-          `${API_URL}api/cart/getcart`,
-          { userId: userId }
-        );
+        const cartResponse = await axios.post(`${API_URL}/api/cart/getcart`, {
+          userId: userId,
+        });
         setCartItems(cartResponse?.data?.cart.items || []);
       }
     } catch (error) {
@@ -158,14 +151,13 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     fetchCartData();
-  },[token,userId]);
+  }, [token, userId]);
 
   const fetchWishlistProducts = async () => {
     try {
-      const response = await axios.post(
-        `${API_URL}api/cat/product/liked`,
-        { userId: userId }
-      );
+      const response = await axios.post(`${API_URL}/api/cat/product/liked`, {
+        userId: userId,
+      });
 
       const activeProducts = response?.data.filter(
         (product) => !product.isDeleted && product.isPublic
@@ -197,11 +189,11 @@ export const CartProvider = ({ children }) => {
       };
 
       const response = await axios.post(
-        `${API_URL}api/cart/updatecart`,
+        `${API_URL}/api/cart/updatecart`,
         cartItem
       );
       // fetchCartData();
-setCartItems(response.data.cart.items)
+      setCartItems(response.data.cart.items);
       if (response?.data.success) {
         // setCartItems((prevCart) =>
         //   prevCart.map((item) =>
@@ -246,7 +238,7 @@ setCartItems(response.data.cart.items)
     };
     try {
       const response = await axios.post(
-        `${API_URL}api/cart/remove`,
+        `${API_URL}/api/cart/remove`,
         cartItemdelete
       );
 
@@ -261,14 +253,11 @@ setCartItems(response.data.cart.items)
 
   const fetchSubCategories = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}api/admin/subcategories`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${API_URL}/api/admin/subcategories`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       console.log(response?.data.subCategorirs);
       setSubCategories(response?.data.subCategorirs);
       setFilteredData(response?.data.subCategorirs);

@@ -86,7 +86,7 @@ export default function ProductDetail() {
     const fetchProductDetails = async () => {
       setLoading(true)
       try {
-        const response = await axios.get(`${API_URL}api/cat/products/${id}`);
+        const response = await axios.get(`${API_URL}/api/cat/products/${id}`);
         setProduct(response.data);
       } catch (error) {
         setLoading(false)
@@ -178,7 +178,7 @@ export default function ProductDetail() {
       }
 
       try {
-        const response = await axios.get(`${API_URL}api/auth/user-details`, {
+        const response = await axios.get(`${API_URL}/api/auth/user-details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -290,7 +290,7 @@ export default function ProductDetail() {
               }`}
             >
               <img
-                src={`http://192.168.100.155:4000${imageUrl}`}
+                src={`${API_URL}${imageUrl}`}
                 alt={`thumbnail-${idx}`}
                 className={`w-full h-full object-cover ${
                   selectedImageIndex === idx
@@ -321,9 +321,9 @@ export default function ProductDetail() {
                 style={{ cursor: "zoom-in" }}
               >
                 <img
-                  src={`http://192.168.100.155:4000${imageUrl}`}
+                  src={`${API_URL}${imageUrl}`}
                   alt={`selected-${idx}`}
-                  className={`w-full h-[70vh] object-cover transition-transform duration-300 ${
+                  className={`w-full h-[70vh] object-contain transition-transform duration-300 ${
                     idx === 0 ? "lg:py-0 md:py-10 py-10" : "py-0"
                   }`}
                   style={{ transition: "transform 0.1s" }}

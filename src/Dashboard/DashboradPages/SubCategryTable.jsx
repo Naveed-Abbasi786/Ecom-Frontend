@@ -57,7 +57,7 @@ const SubcategoryTable = (props) => {
   const fetchSubCategories = async () => {
     try {
       const response = await axios.get(
-        `${API_URL}api/admin/subcategories`,
+        `${API_URL}/api/admin/subcategories`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -104,7 +104,7 @@ const SubcategoryTable = (props) => {
   const handleDelete = async (id, item) => {
     try {
       await axios.post(
-        `${API_URL}api/admin/subcategory/id`,
+        `${API_URL}/api/admin/subcategory/id`,
         { categoryId: item.category, subcategoryId: item._id },
         {
           headers: {

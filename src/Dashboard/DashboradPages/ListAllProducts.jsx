@@ -40,7 +40,7 @@ export default function ProductsTable() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}api/admin/products`, {
+        const response = await axios.get(`${API_URL}/api/admin/products`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const activeProducts = response.data.products.filter(
@@ -76,7 +76,7 @@ export default function ProductsTable() {
 
     try {
       const response = await axios.post(
-        `${API_URL}api/admin/product/id`,
+        `${API_URL}/api/admin/product/id`,
         { productId: _id },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -101,7 +101,7 @@ export default function ProductsTable() {
       setStatusMap((prev) => ({ ...prev, [_id]: newStatus }));
 
       const response = await axios.post(
-        `${API_URL}api/admin/product/toggle-status`,
+        `${API_URL}/api/admin/product/toggle-status`,
         {
           productId: _id,
           isPublic: newStatus,
@@ -228,7 +228,7 @@ export default function ProductsTable() {
                     <tr key={index}>
                       <td className="p-4 border-b  text-black flex items-center gap-4 border-blue-gray-50">
                         <Avatar
-                          src={`http://192.168.100.155:4000${product.imageUrls[0]}`}
+                          src={`${API_URL}${product.imageUrls[0]}`}
                           alt={product.name}
                           className="w-12 h-12"
                         />

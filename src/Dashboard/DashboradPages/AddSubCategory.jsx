@@ -28,7 +28,7 @@ export default function AddSubCategory(props) {
         setLoad(true);
   
         await axios.post(
-          `${API_URL}api/admin/subcategory`,
+          `${API_URL}/api/admin/subcategory`,
           {
             name: values.subcategoryName,
             categoryId: categoryState._id, // Using centralized state
@@ -59,7 +59,7 @@ export default function AddSubCategory(props) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`${API_URL}api/cat/categories`);
+        const response = await axios.get(`${API_URL}/api/cat/categories`);
         setCategories(response?.data.categories || []);
       } catch (error) {
         console.error("Error fetching categories:", error);

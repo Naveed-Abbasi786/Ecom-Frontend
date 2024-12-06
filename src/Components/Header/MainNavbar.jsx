@@ -39,7 +39,7 @@ export default function MainNavbar() {
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // For search input
+  const [searchQuery, setSearchQuery] = useState(""); 
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -64,7 +64,7 @@ export default function MainNavbar() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}api/cat/products`, {
+      const response = await axios.get(`${API_URL}/api/cat/products`, {
         params: {
           page,
           limit,
@@ -90,7 +90,7 @@ export default function MainNavbar() {
   const navigate = useNavigate();
 
   const handleProductClick = (productId) => {
-    setSearchQuery("")
+    setSearchQuery("");
     navigate(`/product-detail/${productId}`);
   };
 
@@ -244,18 +244,21 @@ export default function MainNavbar() {
               className="text-gray-500"
             />
           </div>
-          {isCategoriesOpen && (
-            <div className="pl-8 text-gray-600 space-y-2">
-              {nav.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="py-1 cursor-pointer hover:text-[#1cc0a0]"
-                >
-                  <Link to={item.link}>{item.name}</Link>
-                </div>
-              ))}
-            </div>
-          )}
+
+         {isCategoriesOpen && (
+  <div className="pl-8  text-gray-600 space-y-2">
+    {nav.map((item, idx) => (
+      <div
+        key={idx}
+        className="py-1  cursor-pointer hover:text-[#1cc0a0]"
+      >
+        <Link className="w-full" to={item.link}>{item.name}</Link>
+      </div>
+    ))}
+  </div>
+)}
+
+
         </div>
       </div>
 
@@ -278,7 +281,7 @@ export default function MainNavbar() {
                 >
                   <div className="w-[60px] h-[60px] overflow-hidden rounded-md border">
                     <img
-                      src={`http://192.168.100.155:4000${result.imageUrls[0]}`}
+                      src={`${API_URL}${result.imageUrls[0]}`}
                       alt={result.name}
                       className="w-full h-full object-cover"
                     />

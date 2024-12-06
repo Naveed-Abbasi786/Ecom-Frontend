@@ -19,7 +19,7 @@ export default function MyModal() {
   const [isForgetPassword, setIsForgetPassword] = useState(false);
   const [otp, setOtp] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
-  const [timer, setTimer] = useState(300);
+  const [timer, setTimer] = useState(100);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
@@ -28,7 +28,6 @@ export default function MyModal() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
-  // const API_URL = "http://192.168.100.106:4000/api/auth";
 
   const notifySuccess = (message) => toast.success(message);
   const notifyError = (message) => toast.error(message);
@@ -70,7 +69,7 @@ export default function MyModal() {
 
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}api/auth/user-details`, {
+        const response = await axios.get(`${API_URL}/api/auth/user-details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -147,7 +146,7 @@ export default function MyModal() {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}api/auth//signup`,
+        `${API_URL}/api/auth/signup`,
         userData,
         {
           headers: {
@@ -158,7 +157,7 @@ export default function MyModal() {
       setProfileImage("");
       notifySuccess("Verify OTP");
       setIsOtp(true);
-      setTimer(300);
+      setTimer(100);
     } catch (error) {
       notifyError(error.response?.data?.message || "Registration error");
     } finally {
@@ -169,11 +168,11 @@ export default function MyModal() {
   const handleLogin = async (values) => {
     try {
       setLoading(true);
-      const { data } = await axios.post(`${API_URL}api/auth/login`, values);
+      const { data } = await axios.post(`${API_URL}/api/auth/login`, values);
       localStorage.setItem("authToken", data.token);
       setIsLoggedIn(true);
       notifySuccess("Successfully Logged In");
-      setTimeout(() => setIsOpen(false), 2000);
+      setTimeout(() => setIsOpen(false), 1000);
     } catch (error) {
       notifyError(
         error.response?.data?.message || error.message || "Login failed"
@@ -186,20 +185,24 @@ export default function MyModal() {
   const verifyOtp = async () => {
     try {
       setLoading(true);
-      await axios.post(`${API_URL}api/auth/verify-otp`, { otp, email });
+      const response = await axios.post(`${API_URL}/api/auth/verify-otp`, { otp, email });  
+      localStorage.setItem("authToken", response.data.token);  
+      setIsLoggedIn(true);
       notifySuccess("Successfully Verified");
       setTimeout(() => {
         setIsOtp(false);
         setIsSignup(false);
         setIsOpen(false);
+        setOtp("")
         setForm(true);
-      }, 2000);
+      }, 1000);
     } catch (error) {
       notifyError(error.response?.data?.message || "OTP Verification error");
     } finally {
       setLoading(false);
     }
   };
+  
 
   const navigate = useNavigate();
 
@@ -226,7 +229,7 @@ export default function MyModal() {
 
   const firstLetter = user?.username?.[0]?.toUpperCase() || "";
   const avatarSrc = user?.profileImage
-    ? `http://192.168.100.155:4000${user.profileImage}`
+    ? `${API_URL}${user.profileImage}`
     : null;
 
   return (

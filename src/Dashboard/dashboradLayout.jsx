@@ -102,7 +102,7 @@ export default function DashboardLayoutBasic() {
             user: {
               name: username,
               email: user.email,
-              image: `http://192.168.100.155:4000${user.profileImage}`,
+              image: `${API_URL}${user.profileImage}`,
             },
           });
         }

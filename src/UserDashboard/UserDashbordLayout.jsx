@@ -72,7 +72,7 @@ DemoPageContent.propTypes = {
 function DashboardLayoutAccount({ window }) {
   const [session, setSession] = React.useState(null);
   const { user } = React.useContext(CartContext);
-
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const navigate = useNavigate("");
   const username = user?.username?.[0]?.toUpperCase();
   const authentication = React.useMemo(
@@ -83,7 +83,7 @@ function DashboardLayoutAccount({ window }) {
             user: {
               name: username,
               email: user.email,
-              image: `http://192.168.100.155:4000${user.profileImage}`,
+              image: `${API_URL}${user.profileImage}`,
             },
           });
         }
