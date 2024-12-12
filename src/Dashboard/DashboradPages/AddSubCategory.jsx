@@ -72,7 +72,7 @@ export default function AddSubCategory(props) {
   return (
     <div>
       <Toaster position="top-right" reverseOrder={false} />
-      <div className="w-[100%] mt-8 p-4">
+      <div className="w-[100%] mt-8">
         <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
           Add Subcategory
         </h5>

@@ -46,7 +46,7 @@ export const CartProvider = ({ children }) => {
   }, [isLoggedIn]);
 
   const addToCart = async (product, user_id, productQuantity) => {
-    if (!token) {
+    if (!user) {
       alert("Please login");
       return;
     }

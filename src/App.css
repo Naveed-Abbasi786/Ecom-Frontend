@@ -149,3 +149,10 @@
 .bl{
   background-color: #5EC1A1;
 }
+
+.css-1uwp4ue-MuiBreadcrumbs-ol,.css-lc31tn{
+  display: none !important;
+}
+.blog-tags .css-cfd5wn-MuiListItem-root {
+width: auto !important;
+}

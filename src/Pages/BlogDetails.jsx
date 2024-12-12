@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../Components/Header";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import Blog from "../assets/img/news-1.jpg";
 import Blog2 from "../assets/img/news-2.jpg";
@@ -10,9 +10,15 @@ import CommentsSideBar from "../Components/CommentsSideBar";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import BlogSlides from "../Components/BlogSlides";
 import PageHeader from "../Components/PageHeader";
+import axios from "axios";
+import CardStyle from "../Components/CardStyle";
 export default function BlogDetails() {
   const [Save, SetSave] = useState(false);
   const [Like, SetLike] = useState(false);
+  const [blog, SetBlog] = useState({});
+  const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+  const token = localStorage.getItem("authToken");
+  const [loading, setLoading] = useState(false);
   const BlogData = [
     {
       by: "by Hồng Lưu Xuân",
@@ -75,6 +81,29 @@ export default function BlogDetails() {
     },
   ];
 
+  const { id } = useParams();
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          `${API_URL}/api/blog/`,
+          { blogId: id },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        SetBlog(response.data.blog);
+      } catch (error) {
+        setLoading(false);
+        console.error("Error fetching product details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProductDetails();
+  }, [id]);
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isCommentsSidebar, setisCommentsSidebar] = useState(false);
   const handleOpenSidebar = () => {
@@ -88,23 +117,26 @@ export default function BlogDetails() {
   return (
     <>
       <Header />
+      {/* <CardStyle/> */}
       <div>
-      <PageHeader 
-      title="Blog Detsils" 
-      subtitle="Blog" 
-      breadcrumbs={[
-        { label: 'Home', link: '/' },
-        { label: 'Blog Listing', link: '/blog-listing'},
-        { label: 'Blog Details', link: '/blog-details'},
-
-      ]}
-    />
+        <PageHeader
+          title="Blog Detsils"
+          subtitle="Blog"
+          breadcrumbs={[
+            { label: "Home", link: "/" },
+            { label: "Blog Listing", link: "/blog-listing" },
+            { label: "Blog Details", link: "/blog-details" },
+          ]}
+        />
       </div>
-
       <div className="w-[90%] h-full mb-5 flex ml-[5%] mt-4 border-t border-1">
         <div className="w-[80%] h-full mx-auto mt-10">
           <div className="w-[100%] h-[70vh]">
-            <img src={Blog} alt="" className="w-full h-full object-cover" />
+            <img
+              alt=""
+              src={`${API_URL}${blog?.images}`}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="border-b border-t mt-6  mb-8 gap-4  flex justify-between py-2">
             {/* LikeAndComment */}
@@ -165,6 +197,8 @@ export default function BlogDetails() {
 
                 {/* Sidebar */}
                 <CommentsSideBar
+                  blogId={id}
+                  blogComments={blog.comments}
                   isOpen={isSidebarOpen}
                   closeSidebar={handleCloseSidebar}
                 />
@@ -187,7 +221,10 @@ export default function BlogDetails() {
                     ></path>
                   </svg>
                   <span className="text-[13px] font-SohneNormal text-[#156d12]">
-                    47
+                    {/* 47 */}
+                    {blog.comments?.length === 0
+                      ? "No Comments"
+                      : blog.comments?.length}
                   </span>
                 </div>
               </div>
@@ -328,30 +365,26 @@ export default function BlogDetails() {
           <div>
             <div className="flex gap-2 mt-2">
               <p className="text-gray-500 text-sm lg:text-base font-Poppins">
-                by Hồng Lưu Xuân
+                {blog?.author?.username}
               </p>
               <span className="text-gray-500 text-sm lg:text-base font-Poppins">
                 |
               </span>
               <p className="text-gray-500 text-sm lg:text-base font-Poppins">
-                Sep 17, 2019
+                {new Date(blog?.createdAt).toLocaleDateString()}
               </p>
             </div>
             <h3 className="text-gray-800 cursor-pointer hover:text-[#5EC1A1] text-lg lg:text-2xl font-bold leading-6 lg:leading-8">
-              Cras ornare tristique elit.
+              {blog?.title}
             </h3>
 
             <p className="text-gray-600 text-sm lg:text-base mt-2">
               Blog Grid 2 Columns
             </p>
-            <p className="text-[#6b6b6b] text-sm lg:text-base leading-6 mt-3">
-              Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
-              Phasellus hendrerit. Pellentesque aliquet nibh nec urna. In nisi
-              neque, aliquet vel, dapibus id, mattis vel, nisi. Sed pretium,
-              ligula sollicitudin laoreet viverra, tortor libero sodales leo,
-              eget blandit nunc tortor eu nibh. Nullam mollis. Ut justo.
-              Suspendisse potenti.
-            </p>
+            <p
+              dangerouslySetInnerHTML={{ __html: blog?.content }}
+              className="text-[#6b6b6b] text-sm lg:text-base leading-6 mt-3"
+            ></p>
             <p className="text-[#6b6b6b]  text-sm lg:text-base leading-6 mt-3">
               Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
               Phasellus hendrerit. Pellentesque aliquet nibh nec urna. In nisi

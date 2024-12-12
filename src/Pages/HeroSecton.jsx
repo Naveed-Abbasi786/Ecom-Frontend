@@ -119,13 +119,13 @@ export default function HeroSection() {
                 <div className="w-full flex  flex-col flex-wrap">
                   <h1
                     ref={(el) => (titRef.current[index] = el)}
-                    className="font-Josefi lg:text-[60px]  text-[#222222] leading-[75px] font-bold mb-2"
+                    className="font-Josefi lg:text-[60px] text-[40px] text-[#222222] lg:leading-[75px] leading-[50px] font-bold mb-2"
                   >
                     {slide.tit}
                   </h1>
                   <h1
                     ref={(el) => (titleRef.current[index] = el)}
-                    className="font-Josefi text-[60px] text-[#222222] leading-[75px] font-bold mb-2"
+                    className="font-Josefi lg:text-[60px] text-[40px] text-[#222222] lg:leading-[75px] leading-[50px] font-bold mb-2"
                   >
                     <span
                       ref={(el) => (discountRef.current[index] = el)}
@@ -137,7 +137,7 @@ export default function HeroSection() {
                   </h1>
                   <h3
                     ref={(el) => (subtitleRef.current[index] = el)}
-                    className="text-[20px] font-Josefi mb-2"
+                    className="text-[20px]  font-Josefi mb-2"
                   >
                     {slide.subtitle}
                   </h3>
@@ -148,12 +148,17 @@ export default function HeroSection() {
                     {slide.description}
                   </p>
                 </div>
-                <button 
+                <button
                   ref={(el) => (btn.current[index] = el)}
-                className='btn font-Poppins'><span className='spn'></span>Explore Now<Icon
-        icon="tabler:arrow-up-right"
-        className="text-[28px] transition duration-200"
-      /></button>         {/* <button
+                  className="btn font-Poppins -ml-0"
+                >
+                  <span className="spn"></span>Explore Now
+                  <Icon
+                    icon="tabler:arrow-up-right"
+                    className="text-[28px] transition duration-200"
+                  />
+                </button>{" "}
+                {/* <button
   ref={(el) => (btn.current[index] = el)}
   className="relative border-2 border-[#222222] text-[#222222] mt-8 flex items-center gap-2 transition duration-200 font-Poppins py-4 px-6 hover:bg-[#222222] hover:text-white"
 >
@@ -164,7 +169,6 @@ export default function HeroSection() {
   />
   <span className="absolute inset-0 bg-[#3eff37] transition-all duration-500 ease-in-out transform origin-left scale-x-0 hover:scale-x-100"></span>
 </button> */}
-
               </div>
             </div>
             <div className="lg:w-[60%] z-10 w-[100%] h-full lg:flex  md:flex hidden items-center justify-center">

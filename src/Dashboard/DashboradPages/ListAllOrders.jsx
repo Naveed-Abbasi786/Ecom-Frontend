@@ -182,7 +182,7 @@ const OrderTable = () => {
               {currentData.map((item) => {
                 const product = item.products?.[0]?.productId || {};
                 return (
-                  <tr key={item.id} className="border-b">
+                  <tr key={item._id} className="border-b">
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
                         <img

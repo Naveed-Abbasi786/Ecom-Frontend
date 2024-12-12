@@ -28,6 +28,10 @@ export default function HomePage({ productData }) {
   const navigate = useNavigate();
   const { categories, categoryLoading } = useContext(CartContext);
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+  const hanldeShop=()=>{
+    navigate('/shop-list')
+  }
   const category = [
     { CategoryPic: Category1, Title: "Women Collections" },
     { CategoryPic: Category2, Title: "Kids Collections" },
@@ -155,7 +159,7 @@ export default function HomePage({ productData }) {
                 industry
               </p>
               <div className="flex justify-center mt-7">
-                <button className="btn blk font-Poppins">
+                <button onClick={hanldeShop} className="btn blk font-Poppins">
                   <span className="spn bl"></span>Shop Now
                   <Icon
                     icon="tabler:arrow-up-right"

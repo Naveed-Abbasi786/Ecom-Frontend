@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import { CartContext } from "../Context/Context";
+import Empty from "../assets/img/empty.png";
 import { Toaster } from "react-hot-toast";
 export default function CollectionProducts() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -17,6 +18,7 @@ export default function CollectionProducts() {
   const [loading, setLoading] = useState(false);
   const [porductLoading, setProductloading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
+  const [empty, setEmpty] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { addToCart, addToWishlist, user, token } = useContext(CartContext);
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -33,9 +35,12 @@ export default function CollectionProducts() {
     setProductloading(true);
     setSelectedCategoryId(categoryId);
     try {
-      const response = await axios.post(`${API_URL}/api/cat/products/category`, {
-        categoryId,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/cat/products/category`,
+        {
+          categoryId,
+        }
+      );
 
       const activeProducts = response?.data.products.filter(
         (product) => !product.isDeleted && product.isPublic
@@ -111,6 +116,16 @@ export default function CollectionProducts() {
     navigate(`/product-detail/${productId}`);
   };
 
+  useEffect(() => {
+    if (categories.length === 0) {
+      setEmpty(true);
+    } else if (products.length === 0) {
+      setEmpty(true);
+    } else {
+      setEmpty(false);
+    }
+  }, [filterValidCategories, fetchProducts]);
+
   return (
     <div>
       <Toaster position="bottom-right" reverseOrder={false} />
@@ -118,140 +133,155 @@ export default function CollectionProducts() {
         <h1 className="text-center text-[#222222] text-[40px] font-semibold font-Josefi">
           Our Top Collection
         </h1>
-        <p className="text-center font-Poppins text-[#222222] mt-2 text-[15px]">
+        <p className="lg:w-[100%] w-[90%] text-center mx-auto font-Poppins text-[#222222] mt-2 text-[15px]">
           There are some products that we featured for you to choose your best
         </p>
         <div className="flex justify-center mt-10">
           <img src={separator} alt="Separator" />
         </div>
 
-        <TabGroup className="w-full mt-10">
-          <TabList className="w-full mx-auto flex lg:gap-4 gap-2 overflow-x-auto justify-center">
-            {loading ? (
-              <h1>Loading...</h1>
-            ) : categories.length > 0 ? (
-              categories.map((category, idx) => (
-                <Tab
-                  key={category._id}
-                  onClick={() => handleTabClick(idx, category._id)}
-                  className={`${
-                    selectedTab === idx
-                      ? "border-b-2 border-black"
-                      : "text-[#6b6b6b]"
-                  } font-PoppinsBold font-normal capitalize py-2 text-[17px] whitespace-nowrap focus:outline-none`}
-                >
-                  {category.name}
-                </Tab>
-              ))
-            ) : (
-              <h1>No Available</h1>
-            )}
-          </TabList>
-
-          <TabPanels>
-            <div className="w-full max-h-[140vh]  h-auto overflow-y-auto  mt-10 flex gap-8 justify-center flex-wrap">
-              {products.map((product) => (
-                <div
-                  key={product._id}
-                  className="lg:w-[20%] md:w-[40%] h-[60vh] cursor-pointer flex flex-col"
-                >
-                  <div className="w-full relative h-full group overflow-hidden">
-                    <div
-                      onClick={() => handleProductClick(product._id)}
-                      className="group relative bg-gray-100 w-full h-full"
-                    >
-                      {porductLoading || imageLoading ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                          <CircularProgress />
-                        </div>
-                      ) : (
-                        <>
-                          {/* Default Image */}
-                          <img
-                            src={`${API_URL}${product.imageUrls[0]}`}
-                            alt="Product"
-                            onLoad={() => setImageLoading(false)}
-                            onError={() => setImageLoading(false)}
-                            className={`w-full h-full object-contain transition-opacity duration-500 ${
-                              imageLoading
-                                ? "hidden"
-                                : "block group-hover:opacity-0"
-                            }`}
-                          />
-                          {/* Hover Image */}
-                          <img
-                            src={`${API_URL}${product.imageUrls[1]}`}
-                            alt="Product Hover Image"
-                            className="w-full h-full object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100 absolute top-0 left-0"
-                          />
-                        </>
-                      )}
-                    </div>
-
-                    {product.discount && !loading && (
-                      <div
-                        className={`${
-                          product.discount > "10"
-                            ? "bg-[#E73C2F]"
-                            : "bg-[#5EC1A1]"
-                        } absolute z-30 status top-[2%] right-[3%]`}
-                      >
-                        {product.discount}%
-                      </div>
-                    )}
-
-                    {!loading && (
-                      <div className="absolute top-50 bottom-0 w-full flex justify-center gap-2 items-center text-white py-2 opacity-0 translate-y-full transition-all duration-500 ease-in-out group-hover:translate-y-0 group-hover:opacity-100">
-                        <span>
-                          <Icon
-                            icon={
-                              product.likedBy?.includes(user._id)
-                                ? "solar:heart-bold"
-                                : "mdi-light:heart"
-                            }
-                            onClick={(event) =>
-                              handleAddToWhislist(product, event)
-                            }
-                            className="bg-gray-900 lg:text-[36px] text-[30px] hover:bg-[#5EC1A1] transition duration-300 py-2 cursor-pointer"
-                          />
-                        </span>
-                        <span
-                          onClick={() => handleAddToCart(product, event)}
-                          className="lg:text-[13px] text-[12px] sm:text-[15px] text-center font-semibold bg-[#3e3e3c] hover:bg-[#5EC1A1] transition duration-300 py-2 px-6 cursor-pointer"
-                        >
-                          Add to Cart
-                        </span>
-                        <span>
-                          <Icon
-                            icon="line-md:search"
-                            className="bg-gray-900 lg:text-[36px] text-[30px] hover:bg-[#5EC1A1] transition duration-300 py-2 cursor-pointer"
-                          />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Hide Name and Price While Loading */}
-                  <div className={`h-[15%] mt-2 ${loading ? "hidden" : ""}`}>
-                    <span className="block text-[16px] font-Poppins text-[#222222] font-semibold">
-                      {product.name}
-                    </span>
-                    <span className="block text-[16px] font-Poppins text-gray-700 font-semibold">
-                      ${product.price}
-                    </span>
-                  </div>
-                </div>
-              ))}
+        {empty ? (
+          <>
+            <div className="w-[full] h-[30vh] flex justify-center items-center">
+              <img src={Empty} className="w-[150px] h-[150px] object-cover" />
             </div>
+          </>
+        ) : (
+          <>
+            <TabGroup className="w-full  mx-auto mt-10">
+              <TabList className="lg:w-full  w-[95%] whitespace-nowrap mx-auto  justify-center flex lg:gap-4 gap-4 overflow-x-auto">
+                {loading ? (
+                  <h1>Loading...</h1>
+                ) : categories.length > 0 ? (
+                  categories.map((category, idx) => (
+                    <Tab
+                      key={category._id}
+                      onClick={() => handleTabClick(idx, category._id)}
+                      className={`${
+                        selectedTab === idx
+                          ? "border-b-2 border-black"
+                          : "text-[#6b6b6b]"
+                      } font-PoppinsBold font-normal capitalize   text-[17px] whitespace-nowrap focus:outline-none`}
+                    >
+                      {category.name}
+                    </Tab>
+                  ))
+                ) : (
+                  <div>
+                    <h1>NO Category Availiable</h1>
+                  </div>
+                )}
+              </TabList>
 
-            {/* Fallback for No Products */}
-            {!loading && products.length === 0 && (
-              <div className="flex justify-center items-center w-full h-full">
-                <h1 className="text-gray-500">No Products Available</h1>
-              </div>
-            )}
-          </TabPanels>
-        </TabGroup>
+              <TabPanels>
+                <div className="w-full max-h-[140vh]  h-auto overflow-y-auto  mt-10 flex gap-8 justify-center flex-wrap">
+                  {products.map((product) => (
+                    <div
+                      key={product._id}
+                      className="lg:w-[20%] md:w-[40%] h-[60vh] cursor-pointer flex flex-col"
+                    >
+                      <div className="w-full relative h-full group overflow-hidden">
+                        <div
+                          onClick={() => handleProductClick(product._id)}
+                          className="group relative bg-gray-100 w-full h-full"
+                        >
+                          {porductLoading || imageLoading ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                              <CircularProgress />
+                            </div>
+                          ) : (
+                            <>
+                              {/* Default Image */}
+                              <img
+                                src={`${API_URL}${product.imageUrls[0]}`}
+                                alt="Product"
+                                onLoad={() => setImageLoading(false)}
+                                onError={() => setImageLoading(false)}
+                                className={`w-full h-full object-contain transition-opacity duration-500 ${
+                                  imageLoading
+                                    ? "hidden"
+                                    : "block group-hover:opacity-0"
+                                }`}
+                              />
+                              {/* Hover Image */}
+                              <img
+                                src={`${API_URL}${product.imageUrls[1]}`}
+                                alt="Product Hover Image"
+                                className="w-full h-full object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100 absolute top-0 left-0"
+                              />
+                            </>
+                          )}
+                        </div>
+
+                        {product.discount && !loading && (
+                          <div
+                            className={`${
+                              product.discount > "10"
+                                ? "bg-[#E73C2F]"
+                                : "bg-[#5EC1A1]"
+                            } absolute z-30 status top-[2%] right-[3%]`}
+                          >
+                            {product.discount}%
+                          </div>
+                        )}
+
+                        {!loading && (
+                          <div className="absolute top-50 bottom-0 w-full flex justify-center gap-2 items-center text-white py-2 opacity-0 translate-y-full transition-all duration-500 ease-in-out group-hover:translate-y-0 group-hover:opacity-100">
+                            <span>
+                              <Icon
+                                icon={
+                                  product.likedBy?.includes(user._id)
+                                    ? "solar:heart-bold"
+                                    : "mdi-light:heart"
+                                }
+                                onClick={(event) =>
+                                  handleAddToWhislist(product, event)
+                                }
+                                className="bg-gray-900 lg:text-[36px] text-[30px] hover:bg-[#5EC1A1] transition duration-300 py-2 cursor-pointer"
+                              />
+                            </span>
+                            <span
+                              onClick={() => handleAddToCart(product, event)}
+                              className="lg:text-[13px] text-[12px] sm:text-[15px] text-center font-semibold bg-[#3e3e3c] hover:bg-[#5EC1A1] transition duration-300 py-2 px-6 cursor-pointer"
+                            >
+                              Add to Cart
+                            </span>
+                            <span>
+                              <Icon
+                                icon="line-md:search"
+                                className="bg-gray-900 lg:text-[36px] text-[30px] hover:bg-[#5EC1A1] transition duration-300 py-2 cursor-pointer"
+                              />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Hide Name and Price While Loading */}
+                      <div
+                        className={`h-[15%] mt-2 ${loading ? "hidden" : ""}`}
+                      >
+                        <span className="block text-[16px] font-Poppins text-[#222222] font-semibold">
+                          {product.name}
+                        </span>
+                        <span className="block text-[16px] font-Poppins text-gray-700 font-semibold">
+                          ${product.price}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Fallback for No Products */}
+                {!loading && products.length === 0 && (
+                  <div className="flex justify-center items-center w-full h-full">
+                    <h1 className="text-gray-500">No Products Available</h1>
+                  </div>
+                )}
+              </TabPanels>
+            </TabGroup>
+          </>
+        )}
+
         <div className="flex justify-center mt-10">
           <img src={separator} alt="Separator" />
         </div>

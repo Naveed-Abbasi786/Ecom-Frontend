@@ -20,7 +20,7 @@ import { useSort } from "@table-library/react-table-library/sort";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
 
-const BlogListTable = (props) => {
+const BlogListTable = ({ handleSubmit }) => {
   const [search, setSearch] = useState("");
   const [Blogs, setBlogs] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -37,7 +37,8 @@ const BlogListTable = (props) => {
   const token = localStorage.getItem("authToken");
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-  const handleEdit = (id) => {
+
+    const handleEdit = (id) => {
     if (editingId === id) {
       setEditMode(!editMode);
     } else {
@@ -63,10 +64,15 @@ const BlogListTable = (props) => {
       console.error("Error fetching categories:", error);
     }
   };
+  
+
 
   useEffect(() => {
     fetchBlogs();
-  }, [props.handleSubmit]);
+    if(handleSubmit){
+      fetchBlogs()
+    }
+  }, []);
 
   const handleSave = async (item) => {
     console.log(item);
@@ -91,11 +97,12 @@ const BlogListTable = (props) => {
       toast.error(error.response?.data?.message || error.message);
     }
   };
+
   const handleDelete = async (id, item) => {
     try {
       await axios.post(
-        `${API_URL}/api/admin/subBLOG/id`,
-        { BLOGId: item.BLOG, subBLOGId: item._id },
+        `${API_URL}/api/admin/blog/id`,
+        { blogId: id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -285,7 +292,7 @@ const BlogListTable = (props) => {
                     tableList.map((item) => (
                       <Row
                         item={item}
-                        key={item.id}
+                        key={item._id}
                         style={{
                           borderBottom: "1px solid #ddd",
                           backgroundColor: "#fff",

@@ -9,7 +9,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import EditIcon from "@mui/icons-material/Edit";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-
+import '../App.css'
 // Pages
 import Dashbords from "./dashboarad";
 import AddCategory from "./DashboradPages/AddCategory";
@@ -90,7 +90,6 @@ export default function DashboardLayoutBasic() {
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
   // const { user } = React.useContext(CartContext);
   const {  user } = React.useContext(CartContext);
-  console.log(user)
 
   const navigate = useNavigate("");
   const username = user?.username?.[0]?.toUpperCase();

@@ -18,6 +18,7 @@ import Wishlest from "../Pages/Wishlest";
 import ShopList from "../Pages/ShopList";
 import Contact from "../Pages/Contact";
 import About from "../Pages/About";
+import AddBlog from "../Dashboard/DashboradPages/AddBlog";
 
 const Router = () => {
   return (
@@ -40,10 +41,12 @@ const Router = () => {
         <Route path="/your-cart" element={<YourBag />} />
         <Route path="/wishlist" element={<Wishlest />} />
         <Route path="/shop-list" element={<ShopList />} />
+        <Route path="/shop-list/:id" element={<ShopList />} />
         <Route path="/check-out" element={<CheckOut />} />
         <Route path="/reset-password" element={<Resetpassword />} />
         <Route path="/blog-listing" element={<BlogListing />} />
-        <Route path="/blog-details" element={<BlogDetails />} />
+        <Route path="/blog-details/:id" element={<BlogDetails />} />
+        <Route path="/add-blog" element={<AddBlog />} />
         <Route path="/product-detail/:id" element={<ProductDetail />} />
         <Route path="/contact-us" element={<Contact />} />
         <Route path="/about-us" element={<About />} />

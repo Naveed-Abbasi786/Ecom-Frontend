@@ -69,7 +69,7 @@ const AddCategory = (porps) => {
       <div className="">
         <ToastContainer />
         {/* Add Category Section */}
-        <div className="w-[100%] border-r p-4">
+        <div className="w-[100%] border-r">
           <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
             Add Category
           </h5>

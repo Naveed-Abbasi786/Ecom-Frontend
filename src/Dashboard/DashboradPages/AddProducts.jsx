@@ -162,6 +162,9 @@ const AddProducts = () => {
 
   return (
     <>
+        <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
+            Add Products
+          </h5>
       <ToastContainer />
       <Formik
         initialValues={{
@@ -191,7 +194,6 @@ const AddProducts = () => {
               error={touched.productName && Boolean(errors.productName)}
               helperText={touched.productName && errors.productName}
             />
-
             <Autocomplete
               options={categories}
               getOptionLabel={(option) => option.name || ""}

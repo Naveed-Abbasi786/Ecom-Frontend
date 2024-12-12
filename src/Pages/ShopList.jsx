@@ -8,13 +8,14 @@ import {
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import "tailwindcss/tailwind.css";
+import Empty from "../assets/img/out-of-stock.png";
 import Footer from "../Components/Footer";
 import Header from "../Components/Header";
 import ProductPic from "../assets/img/pro1.jpg";
 import ProductPicHover from "../assets/img/pro2.jpg";
 import { CartContext } from "../Context/Context";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Slider from "@mui/material/Slider";
 import useDebounce from "../Hook/useDebounce";
 
@@ -31,17 +32,44 @@ const ShopList = () => {
   const [checkedCategories, setCheckedCategories] = useState({});
   const [checkedSubCategories, setCheckedSubCategories] = useState({});
   const [subCategory, setSubCategory] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const hasRunRef = useRef(false);
+  // const hasRunRef = useRef(false);
+
+  const [isCategoryLoaded, setIsCategoryLoaded] = useState(false);
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const categoryId = searchParams.get("category");
+
+    if (categoryId) {
+      setSelectedCategoryId(categoryId);
+      setIsCategoryLoaded(true);
+      setProducts([]);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (isCategoryLoaded) {
+      setCheckedCategories({
+        [selectedCategoryId]: true,
+      });
+      if (selectedCategoryId) {
+        setProducts([]);
+        hanldeFilterdProducts();
+      }
+    }
+  }, [selectedCategoryId, isCategoryLoaded]);
 
   const navigate = useNavigate();
-
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const fetchProducts = async () => {
+    if (selectedCategoryId) return;
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/cat/products`, {
@@ -65,46 +93,45 @@ const ShopList = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
+    if (selectedCategoryId) {
+      fetchProducts();
+    }
   }, [page]);
-
-
 
   const searchDebounced = useDebounce(searchTerm, 1000);
 
- const searchProducts = async () => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/api/cat/products/filter-products`,
-      {
-        params: {
-          name: searchDebounced,
-        },
-      }
-    );
-    setProducts(response.data.products || []);
-  } catch (error) {
-    setProducts([])
-    console.error("Error searching products:", error);
-  }
-};
+  const searchProducts = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/cat/products/filter-products`,
+        {
+          params: {
+            name: searchDebounced,
+          },
+        }
+      );
+      setProducts(response.data.products || []);
+    } catch (error) {
+      setProducts([]);
+      console.error("Error searching products:", error);
+    }
+  };
 
-const handleSearchChange = (e) => {
-  setSearchTerm(e.target.value);
-};
-useEffect(() => {
-  if (searchDebounced === "") {
-    fetchProducts(); 
-  } else {
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  useEffect(() => {
+    console.log("Debounced Search Term:", searchDebounced);
+
+    // Check if the search term length is 0
+    if (searchDebounced.length === 0) {
+      console.log("Input is empty, not fetching data.");
+      return;
+    }
+
     searchProducts();
-  }
-}, [searchDebounced]);
-
-useEffect(() => {
-  fetchProducts();
-}, [page]);
-
-
+  }, [searchDebounced]);
 
   const filterValidCategories = async () => {
     try {
@@ -132,7 +159,7 @@ useEffect(() => {
     setSelectedCategoryId(id);
 
     setProducts([]);
-    hanldeFilterdProducts(id);
+    hanldeFilterdProducts();
   };
 
   const handleSubCategoryClick = (id) => {
@@ -167,14 +194,17 @@ useEffect(() => {
       filterValidSubCategories();
     }
   }, [selectedCategoryId]);
-
-  const hanldeFilterdProducts = async (_id) => {
+  useEffect(() => {
+    hanldeFilterdProducts();
+  }, [selectedCategoryId]);
+  const hanldeFilterdProducts = async () => {
+    if (!selectedCategoryId) return;
     setLoading(true);
     try {
       const response = await axios.post(
         `${API_URL}/api/cat/products/category`,
         {
-          categoryId: _id,
+          categoryId: selectedCategoryId,
         }
       );
 
@@ -210,21 +240,21 @@ useEffect(() => {
   };
 
   const InStock = async (_id) => {
-    const outOfStock = false
+    const outOfStock = false;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/cat/products`, {
-        params: {
-          page,
-          limit,
-          outOfStock
-        },
-      });
+      const response = await axios.get(
+        `${API_URL}/api/cat/products/filter-products`,
+        {
+          params: {
+            outOfStock,
+          },
+        }
+      );
       console.log("API Response:", response.data);
 
       const activeProducts = response?.data.products.filter(
-        (product) =>
-          !product.isDeleted && product.isPublic 
+        (product) => !product.isDeleted && product.isPublic
       );
 
       setProducts(activeProducts || []);
@@ -241,21 +271,21 @@ useEffect(() => {
   };
 
   const OutOfStock = async (_id) => {
-    const outOfStock = true
+    const outOfStock = true;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/cat/products`, {
-        params: {
-          page,
-          limit,
-          outOfStock
-        },
-      });
+      const response = await axios.get(
+        `${API_URL}/api/cat/products/filter-products`,
+        {
+          params: {
+            outOfStock,
+          },
+        }
+      );
       console.log("API Response:", response.data);
 
       const activeProducts = response?.data.products.filter(
-        (product) =>
-          !product.isDeleted && product.isPublic 
+        (product) => !product.isDeleted && product.isPublic
       );
 
       setProducts(activeProducts || []);
@@ -268,8 +298,8 @@ useEffect(() => {
   };
 
   const ClearAll = () => {
-    setProducts([]);
     fetchProducts();
+    setProducts([]);
     setSelectedFilter("");
     setCheckedCategories("");
     setMinPrice("");
@@ -302,8 +332,8 @@ useEffect(() => {
     navigate(`/product-detail/${productId}`);
   };
 
-  const debouncedMinPrice = useDebounce(minPrice, 1500);
-  const debouncedMaxPrice = useDebounce(maxPrice, 1500);
+  const debouncedMinPrice = useDebounce(minPrice, 1000);
+  const debouncedMaxPrice = useDebounce(maxPrice, 1000);
 
   const hanldeMinChnage = (e) => {
     setMinPrice(e.target.value);
@@ -633,7 +663,14 @@ useEffect(() => {
                   </div>
                 ))
               ) : (
-                <h2>No Products Available</h2>
+                <>
+                  <div className="w-[1000px] h-[90vh] flex justify-center items-center">
+                    <img
+                      src={Empty}
+                      className="w-[150px] h-[150px] mx-auto object-cover"
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>

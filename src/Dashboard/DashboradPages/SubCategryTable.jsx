@@ -319,7 +319,7 @@ const SubcategoryTable = (props) => {
                           <span
                             style={{ fontWeight: "bold", fontSize: "14px" }}
                           >
-                            {item.category.name}
+                            {item?.category?.name}
                           </span>
                         </Cell>
 

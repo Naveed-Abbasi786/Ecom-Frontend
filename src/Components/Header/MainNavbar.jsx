@@ -39,7 +39,7 @@ export default function MainNavbar() {
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -70,7 +70,6 @@ export default function MainNavbar() {
           limit,
         },
       });
-      console.log(response); // Check the full response data
       const activeProducts = response?.data.products.filter(
         (product) => !product.isDeleted && product.isPublic
       );
@@ -226,12 +225,51 @@ export default function MainNavbar() {
           <input
             type="text"
             placeholder="Search..."
+            value={searchQuery}
+            onChange={handleSearchChange}
             className="flex-1 bg-transparent font-Poppins outline-none text-gray-700  px-2"
           />
           <button className="bg-[#5EC1A1] p-2 rounded-md">
             <Icon icon="line-md:search" className="text-xl text-white" />
           </button>
         </div>
+
+        {searchQuery && (
+        <div className="w-[100%]  absolute bg-white shadow-lg  rounded-lg z-10">
+          <ul className="w-full max-h-[300px] overflow-y-auto">
+            {loading ? (
+              <li className="text-gray-500 text-center py-4">Loading...</li>
+            ) : filteredProducts.length === 0 ? (
+              <li className="text-gray-500 text-center py-4">
+                No results found
+              </li>
+            ) : (
+              filteredProducts.map((result, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleProductClick(result._id)}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer border-b last:border-none"
+                >
+                  <div className="w-[60px] h-[60px] overflow-hidden rounded-md border">
+                    <img
+                      src={`${API_URL}${result.imageUrls[0]}`}
+                      alt={result.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-700 truncate">
+                      {result.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">{result.price} PKR</p>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+
 
         <div className="mt-6">
           <div
@@ -245,21 +283,22 @@ export default function MainNavbar() {
             />
           </div>
 
-         {isCategoriesOpen && (
-  <div className="pl-8  text-gray-600 space-y-2">
-    {nav.map((item, idx) => (
-      <div
-        key={idx}
-        className="py-1  cursor-pointer hover:text-[#1cc0a0]"
-      >
-        <Link className="w-full" to={item.link}>{item.name}</Link>
-      </div>
-    ))}
-  </div>
-)}
-
-
+          {isCategoriesOpen && (
+            <div className="pl-8  text-gray-600 space-y-2">
+              {nav.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="py-1  cursor-pointer hover:text-[#1cc0a0]"
+                >
+                  <Link className="w-full" to={item.link}>
+                    {item.name}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+        
       </div>
 
       {/* Search Results */}
