@@ -148,30 +148,32 @@ export default function CollectionProducts() {
           </>
         ) : (
           <>
-            <TabGroup className="w-full  mx-auto mt-10">
-              <TabList className="lg:w-full  w-[95%] whitespace-nowrap mx-auto  justify-center flex lg:gap-4 gap-4 overflow-x-auto">
-                {loading ? (
-                  <h1>Loading...</h1>
-                ) : categories.length > 0 ? (
-                  categories.map((category, idx) => (
-                    <Tab
-                      key={category._id}
-                      onClick={() => handleTabClick(idx, category._id)}
-                      className={`${
-                        selectedTab === idx
-                          ? "border-b-2 border-black"
-                          : "text-[#6b6b6b]"
-                      } font-PoppinsBold font-normal capitalize   text-[17px] whitespace-nowrap focus:outline-none`}
-                    >
-                      {category.name}
-                    </Tab>
-                  ))
-                ) : (
-                  <div>
-                    <h1>NO Category Availiable</h1>
-                  </div>
-                )}
-              </TabList>
+            <TabGroup className="w-full mx-auto mt-10">
+              <div className="lg:w-[60%] w-full  items-center flex justify-center mx-auto">
+                <TabList className="lg:w-full w-[90%] mx-auto flex lg:gap-4 gap-4 overflow-x-auto scrollbar-hide">
+                  {loading ? (
+                    <h1 className="text-center">Loading...</h1>
+                  ) : categories.length > 0 ? (
+                    categories.map((category, idx) => (
+                      <Tab
+                        key={category._id}
+                        onClick={() => handleTabClick(idx, category._id)}
+                        className={`${
+                          selectedTab === idx
+                            ? "border-b-2 border-black"
+                            : "text-[#6b6b6b]"
+                        } font-PoppinsBold font-normal capitalize text-[17px] whitespace-nowrap focus:outline-none`}
+                      >
+                        {category.name}
+                      </Tab>
+                    ))
+                  ) : (
+                    <div className="text-center">
+                      <h1>NO Category Available</h1>
+                    </div>
+                  )}
+                </TabList>
+              </div>
 
               <TabPanels>
                 <div className="w-full max-h-[140vh]  h-auto overflow-y-auto  mt-10 flex gap-8 justify-center flex-wrap">
