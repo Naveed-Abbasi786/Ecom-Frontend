@@ -94,6 +94,10 @@ export default function HomePage({ productData }) {
     navigate("/ProductDetail");
     productData(postdata);
   };
+    const handleCategorySelect = (val) => {
+      navigate(`/shop-list?category=${val._id}`)
+      setShowCategories(false); 
+    };
   return (
     <div>
       <MiniNavbar />
@@ -123,8 +127,12 @@ export default function HomePage({ productData }) {
                 key={idx}
                 className="lg:w-[20%] md:w-[30%] flex flex-col justify-center"
               >
-                <div className="w-full h-full cursor-pointer rounded-full relative group overflow-hidden">
+                <div 
+              onClick={() => handleCategorySelect(val)}
+
+                 className="w-full h-full cursor-pointer rounded-full relative group overflow-hidden">
                   <img
+                
                     src={`${API_URL}${val.image}`}
                     alt=""
                     className="w-full h-full object-cover"

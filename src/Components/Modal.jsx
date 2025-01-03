@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { Menu, MenuItem, Avatar, CircularProgress } from "@mui/material";
+import { Menu, MenuItem, Avatar, CircularProgress, TextField } from "@mui/material";
 import { deepOrange } from "@mui/material/colors";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
@@ -357,121 +357,114 @@ export default function MyModal() {
                     </TabList>
                     <TabPanels>
                       <TabPanel>
-                        <Formik
-                          initialValues={{
-                            userName: "",
-                            email: "",
-                            password: "",
-                          }}
-                          validationSchema={validationSchema}
-                          onSubmit={handleRegistration}
-                        >
-                          {({ isSubmitting, errors, touched }) => (
-                            <Form>
-                              <div className="flex items-center flex-col gap-5 mt-8  justify-center">
-                                <div>
-                                  <label
-                                    htmlFor="profile-image"
-                                    className="bg-sky-300 rounded-lg text-white p-2"
-                                  >
-                                    Profile Image
-                                  </label>
-                                  <input
-                                    type="file"
-                                    id="profile-image"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="hidden"
-                                  />
-                                </div>
+                      <Formik
+  initialValues={{
+    userName: "",
+    email: "",
+    password: "",
+  }}
+  validationSchema={validationSchema}
+  onSubmit={handleRegistration}
+>
+  {({ isSubmitting, errors, touched }) => (
+    <Form className="gap-8">
+      {/* Upload Profile Image */}
+   
+      {/* User Name */}
+      <Field
+      
+        name="userName"
+        render={({ field }) => (
+          <TextField
+            {...field}
+            sx={{marginBottom:"5%",marginTop:"5%"}}
+            label="User Name"
+            fullWidth
+            error={touched.userName && Boolean(errors.userName)}
+            helperText={touched.userName && errors.userName}
+          />
+        )}
+      />
 
-                                {profileImage && (
-                                  <div>
-                                    <img
-                                      src={profileImage}
-                                      alt="Profile Preview"
-                                      className="profile-image-preview"
-                                      style={{
-                                        width: "100px",
-                                        height: "100px",
-                                        objectFit: "cover",
-                                        borderRadius: "50%",
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-2 mt-5">
-                                <Field
-                                  name="userName"
-                                  type="text"
-                                  placeholder="User Name"
-                                  className={`w-full p-2 mb-4 mt-2 rounded bg-transparent border-2 outline-none ${
-                                    errors.email && touched.email
-                                      ? "border-red-500"
-                                      : "border-gray-300"
-                                  }`}
-                                />
-                                <ErrorMessage
-                                  name="userName"
-                                  component="div"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-2 mt-3">
-                                <Field
-                                  name="email"
-                                  type="email"
-                                  placeholder="Email Address"
-                                  className={`w-full p-2 mb-4 mt-2 rounded bg-transparent border-2 outline-none ${
-                                    errors.email && touched.email
-                                      ? "border-red-500"
-                                      : "border-gray-300"
-                                  }`}
-                                />
-                                <ErrorMessage
-                                  name="email"
-                                  component="div"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-2 mt-3">
-                                <Field
-                                  name="password"
-                                  type="password"
-                                  placeholder="Password"
-                                  className={`w-full p-2 mb-4 mt-2 rounded bg-transparent border-2 outline-none ${
-                                    errors.email && touched.email
-                                      ? "border-red-500"
-                                      : "border-gray-300"
-                                  }`}
-                                />
-                                <ErrorMessage
-                                  name="password"
-                                  component="div"
-                                  className="text-red-500 text-sm"
-                                />
-                              </div>
+      {/* Email */}
+      <Field
+        name="email"
+        render={({ field }) => (
+          <TextField
+            {...field}
+            sx={{marginBottom:"5%"}}
 
-                              <div className="mt-6 flex justify-center">
-                                <Button
-                                  type="submit"
-                                  disabled={isSubmitting}
-                                  className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-                                >
-                                  {loading ? (
-                                    <CircularProgress
-                                      size={24}
-                                      color="inherit"
-                                    />
-                                  ) : (
-                                    "Sign Up"
-                                  )}
-                                </Button>
-                              </div>
-                            </Form>
-                          )}
-                        </Formik>
+            label="Email Address"
+            type="email"
+            fullWidth
+            error={touched.email && Boolean(errors.email)}
+            helperText={touched.email && errors.email}
+          />
+        )}
+      />
+
+      {/* Password */}
+      <Field
+        name="password"
+        render={({ field }) => (
+          <TextField
+            {...field}
+            sx={{marginBottom:"5%"}}
+
+            label="Password"
+            type="password"
+            fullWidth
+            error={touched.password && Boolean(errors.password)}
+            helperText={touched.password && errors.password}
+          />
+        )}
+      />
+
+
+<div className="w-full p-2 mb-4 mt-2 rounded bg-transparent border-2 border-gray-300 outline-none">
+        <label
+          htmlFor="profile-image"
+          className="w-full block text-gray-500 cursor-pointer"
+        >
+          Upload Profile Image
+        </label>
+        <input
+          type="file"
+          id="profile-image"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+      </div>
+      {profileImage && (
+        <div className="flex justify-center mt-2">
+          <img
+            src={profileImage}
+            alt="Profile Preview"
+            style={{
+              width: "100px",
+              height: "100px",
+              objectFit: "cover",
+              borderRadius: "50%",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <div className="mt-6 flex justify-center">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+        >
+          {isSubmitting ? "Submitting..." : "Sign Up"}
+        </button>
+      </div>
+    </Form>
+  )}
+</Formik>
+
                       </TabPanel>
                       <TabPanel>
                         <Formik

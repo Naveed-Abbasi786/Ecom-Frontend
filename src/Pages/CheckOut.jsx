@@ -235,16 +235,16 @@ export default function CheckOut() {
 
                     {/* Last Name */}
                     <Grid item xs={12} sm={6}>
-                      <Field
-                        name="lastName"
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Last Name"
-                            fullWidth
-                            error={touched.lastName && Boolean(errors.lastName)}
-                            helperText={touched.lastName && errors.lastName}
-                          />
+                        <Field
+                          name="lastName"
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Last Name"
+                              fullWidth
+                              error={touched.lastName && Boolean(errors.lastName)}
+                              helperText={touched.lastName && errors.lastName}
+                            />
                         )}
                       />
                     </Grid>

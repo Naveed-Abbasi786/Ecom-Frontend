@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/solid";
+import { Link } from "react-router-dom";
 
 export default function MiniNavbar() {
   const [isCategoriesOpen, setCategoriesOpen] = useState(false);
@@ -23,10 +24,14 @@ export default function MiniNavbar() {
           </span>
         </div>
         <span className="uppercase text-gray-400 font-Poppins text-[14px] hover:text-[#1cc0a0] cursor-pointer hover:underline">
+        <Link to='/about-us'>
           About Us
+                  </Link>
         </span>
         <span className="uppercase text-gray-400 font-Poppins text-[14px] hover:text-[#1cc0a0] cursor-pointer hover:underline">
+        <Link to='/contact-us'>
           Contact Us
+                  </Link>
         </span>
       </div>
 
@@ -34,7 +39,7 @@ export default function MiniNavbar() {
         <Menu>
           <MenuButton 
             onClick={toggleCategories} 
-            className="inline-flex lg:hidden flex items-center text-[14px] hover:text-[#1cc0a0] cursor-pointer uppercase font-Poppins text-gray-400 bg-transparent"
+            className=" lg:hidden flex items-center text-[14px] hover:text-[#1cc0a0] cursor-pointer uppercase font-Poppins text-gray-400 bg-transparent"
           >
             links
             <ChevronDownIcon 
@@ -60,16 +65,20 @@ export default function MiniNavbar() {
               </div>
             </MenuItem>
             <MenuItem>
-              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer text-black gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
+              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer  gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
                 <span className="uppercase text-gray-400 font-Poppins text-[14px] hover:text-[#1cc0a0] cursor-pointer hover:underline">
+                  <Link to='/about-us'>
                   About Us
+                  </Link>
                 </span>
               </button>
             </MenuItem>
             <MenuItem>
-              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer text-black gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
+              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer  gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
                 <span className="uppercase text-gray-400 font-Poppins text-[14px] hover:text-[#1cc0a0] cursor-pointer hover:underline">
+                <Link to='/contact-us'>
                   Contact Us
+                  </Link>
                 </span>
               </button>
             </MenuItem>
@@ -103,25 +112,25 @@ export default function MiniNavbar() {
           <MenuItems
             transition
             anchor="bottom end"
-            className="w-18 origin-top-right bg-white  shadow-lg rounded-xl border border-white/5  p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+            className="w-18 z-50 origin-top-right bg-white  shadow-lg rounded-xl border border-white/5  p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
           >
             <MenuItem>
-              <button className="group flex w-full text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer items-center gap-2 text-black rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
+              <button className="group flex w-full text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer items-center gap-2  rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
                 Pkr
               </button>
             </MenuItem>
             <MenuItem>
-              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer text-black gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
+              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer  gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
                 Aur
               </button>
             </MenuItem>
             <MenuItem>
-              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer text-black gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
+              <button className="group flex w-full items-center text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer  gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200 font-Poppins">
                 Pkr
               </button>
             </MenuItem>
             <MenuItem>
-              <button className="group font-Poppins flex w-full text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer items-center gap-2 text-black rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200">
+              <button className="group font-Poppins flex w-full text-gray-400 text-[14px] hover:text-[#1cc0a0] cursor-pointer items-center gap-2  rounded-lg py-1.5 px-3 data-[focus]:bg-gray-200">
                 IND
               </button>
             </MenuItem>

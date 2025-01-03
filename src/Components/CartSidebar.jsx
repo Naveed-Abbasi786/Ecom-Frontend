@@ -336,7 +336,7 @@ export default function CartSidebar({ isOpen, closeSidebar, product }) {
               <div className="flex h-[7vh] gap-2 justify-center ml-2 mt-4">
                 <button
                   onClick={YourBag}
-                  className="w-[150px] h-[40px] duration-500 bg-[#5EC1A1] hover:bg-transparent hover:text-[#5EC1A1] text-white duration-300 transition ease-in-out hover:border-2 border-[#5EC1A1] outline-none"
+                  className="w-[150px] h-[40px]  bg-[#5EC1A1] hover:bg-transparent hover:text-[#5EC1A1] text-white duration-300 transition ease-in-out hover:border-2 border-[#5EC1A1] outline-none"
                 >
                   Your Bag
                 </button>
