@@ -26,7 +26,7 @@ const validationSchema = Yup.object({
   description: Yup.string().required("Requird the Discription"),
   Quantity: Yup.number()
     .required("Required Quantity")
-    .positive("Quantity must be positive")
+    .positive("Quantity must be positive"),
   // category:Yup.required('Requird Category'),
   // Subcategory:Yup.required('Requird Category'),
 });
@@ -43,21 +43,20 @@ const AddProducts = () => {
   const notifyError = (message) => toast.error(message);
   const token = localStorage.getItem("authToken");
   const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/cat/categories`);
+      console.log(response.data);
+      setCategories(response.data.categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          `${API_URL}api/cat/categories`
-        );
-        setCategories(response.data.categories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
     fetchCategories();
   }, []);
-
- 
 
   useEffect(() => {
     if (selectedCategoryId) {
@@ -162,9 +161,9 @@ const AddProducts = () => {
 
   return (
     <>
-        <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
-            Add Products
-          </h5>
+      <h5 className="text-gray-800 font-Poppins text-[30px] mb-4">
+        Add Products
+      </h5>
       <ToastContainer />
       <Formik
         initialValues={{
@@ -259,9 +258,13 @@ const AddProducts = () => {
               fullWidth
               name="discountPercantage"
               value={values.discountPercantage}
-              onChange={handleChange} 
-              error={touched.discountPercantage && Boolean(errors.discountPercantage)}
-              helperText={touched.discountPercantage && errors.discountPercantage}
+              onChange={handleChange}
+              error={
+                touched.discountPercantage && Boolean(errors.discountPercantage)
+              }
+              helperText={
+                touched.discountPercantage && errors.discountPercantage
+              }
             />
             <TextField
               label="Quantity"

@@ -149,7 +149,7 @@ export default function BlogListing() {
                     {/* Author and Date */}
                     <div className="flex gap-2 mb-2">
                       <p className="text-gray-500 text-sm lg:text-base font-Poppins">
-                        {val.author.username}
+                        {val?.author?.username}
                       </p>
                       <span className="text-gray-500 text-sm lg:text-base font-Poppins">
                         |

@@ -84,7 +84,7 @@ export const CartProvider = ({ children }) => {
 
     const cart = {
       productId: product._id,
-      userId: user_id,
+      userId: userId,
     };
 
     try {
